@@ -16,11 +16,11 @@ export const cargoService = {
   getMapPins: async (): Promise<MapPin[]> => {
     if (USE_MOCK) {
       return [
-        { resi: 'MC2607-88101', lokasi: 'SD Negeri 2 Menteng, Jakarta', x: '46%', y: '52%', status: 'Delivered', color: '#7c1405' },
-        { resi: 'MC2607-88245', lokasi: 'SMP Negeri 5 Yogyakarta', x: '52%', y: '58%', status: 'Dalam Transit', color: '#ff9783' },
-        { resi: 'MC2607-88390', lokasi: 'SD Negeri 1 Ubud, Bali', x: '68%', y: '64%', status: 'Delivered', color: '#7c1405' },
-        { resi: 'MC2607-88512', lokasi: 'SMP Negeri 3 Makassar', x: '80%', y: '48%', status: 'Dalam Transit', color: '#ff9783' },
-        { resi: 'MC2607-88677', lokasi: 'SD Negeri 4 Banda Aceh', x: '10%', y: '38%', status: 'Menunggu Pickup', color: '#9b9797' },
+        { resi: 'MC2607-88101', lokasi: 'SD Negeri 2 Menteng, Jakarta', x: '46%', y: '52%', lng: 106.8456, lat: -6.2088, status: 'Delivered', color: '#7c1405' },
+        { resi: 'MC2607-88245', lokasi: 'SMP Negeri 5 Yogyakarta', x: '52%', y: '58%', lng: 110.3705, lat: -7.7956, status: 'Dalam Transit', color: '#ff9783' },
+        { resi: 'MC2607-88390', lokasi: 'SD Negeri 1 Ubud, Bali', x: '68%', y: '64%', lng: 115.2625, lat: -8.5069, status: 'Delivered', color: '#7c1405' },
+        { resi: 'MC2607-88512', lokasi: 'SMP Negeri 3 Makassar', x: '80%', y: '48%', lng: 119.4327, lat: -5.1477, status: 'Dalam Transit', color: '#ff9783' },
+        { resi: 'MC2607-88677', lokasi: 'SD Negeri 4 Banda Aceh', x: '10%', y: '38%', lng: 95.3193, lat: 5.5483, status: 'Menunggu Pickup', color: '#9b9797' },
       ];
     }
     const response = await apiClient.get('/cargo/map-pins');

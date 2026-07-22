@@ -86,6 +86,8 @@ export interface MapPin {
   lokasi: string;
   x: string;
   y: string;
+  lng?: number;
+  lat?: number;
   status: 'Delivered' | 'Dalam Transit' | 'Menunggu Pickup';
   color: string;
 }
