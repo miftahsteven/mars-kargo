@@ -93,7 +93,7 @@ export const ExceptionLogCard: React.FC<ExceptionLogCardProps> = ({ exceptions, 
 
               {/* Inline Form */}
               {isOpen && (
-                <div className="flex flex-wrap gap-2.5 mt-3 p-3 bg-[#f8f4f4] border border-[#201e1d]/20">
+                <div className="flex flex-col sm:flex-row flex-wrap gap-2.5 mt-3 p-3 bg-[#f8f4f4] border border-[#201e1d]/20">
                   <div className="flex-1 min-w-[200px] flex flex-col gap-1">
                     <label className="text-xs text-[#605d5d] font-semibold">Alamat Alternatif</label>
                     <input
@@ -104,7 +104,7 @@ export const ExceptionLogCard: React.FC<ExceptionLogCardProps> = ({ exceptions, 
                     />
                   </div>
 
-                  <div className="w-[180px] flex flex-col gap-1">
+                  <div className="w-full sm:w-[180px] flex flex-col gap-1">
                     <label className="text-xs text-[#605d5d] font-semibold">No. Telepon Baru</label>
                     <input
                       className="input text-xs"
@@ -114,9 +114,9 @@ export const ExceptionLogCard: React.FC<ExceptionLogCardProps> = ({ exceptions, 
                     />
                   </div>
 
-                  <div className="flex items-end">
+                  <div className="flex items-end w-full sm:w-auto">
                     <button
-                      className="btn btn-primary text-xs"
+                      className="btn btn-primary text-xs w-full sm:w-auto"
                       onClick={() => handleSubmit(ex.resi)}
                     >
                       Simpan &amp; Kirim Ulang

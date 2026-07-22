@@ -40,7 +40,8 @@ export const GeoDrillDown: React.FC<GeoDrillDownProps> = ({ islands }) => {
 
       {!selectedIsland ? (
         /* Island Bar Chart */
-        <div className="flex items-end gap-4 h-[220px] pt-14">
+        <div className="overflow-x-auto pb-2">
+          <div className="flex items-end gap-3 sm:gap-4 h-[220px] pt-14 min-w-[360px]">
           {islands.map((isl) => {
             const pct = ((isl.volume / totalVolume) * 100).toFixed(1);
             const barHeight = Math.max(8, Math.round((isl.volume / maxIslandVol) * 160));
@@ -77,6 +78,7 @@ export const GeoDrillDown: React.FC<GeoDrillDownProps> = ({ islands }) => {
               </div>
             );
           })}
+          </div>
         </div>
       ) : (
         /* Province List Breakdown */

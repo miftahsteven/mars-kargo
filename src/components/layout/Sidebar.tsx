@@ -1,9 +1,14 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Truck, LayoutDashboard, MapPin, AlertTriangle, Image as ImageIcon, Receipt, FileSpreadsheet, Building2 } from 'lucide-react';
+import { Truck, LayoutDashboard, MapPin, AlertTriangle, Image as ImageIcon, Receipt, FileSpreadsheet, Building2, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
-export const Sidebar: React.FC = () => {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { user } = useAuth();
 
   const navItems = [
@@ -15,40 +20,56 @@ export const Sidebar: React.FC = () => {
     { to: '/lpj', label: 'Laporan LPJ', icon: FileSpreadsheet },
   ];
 
-  return (
-    <aside className="w-[248px] flex-none bg-[#2d2b2b] text-[#f3f2f2] flex flex-col sticky top-0 h-screen z-20">
-      {/* Brand Header */}
-      <div className="p-5 border-b-2 border-white/10">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-[#ec3013] flex items-center justify-center flex-none">
-            <Truck className="w-5 h-5 text-white" />
+  const sidebarContent = (
+    <aside className="w-[248px] h-full bg-[#2d2b2b] text-[#f3f2f2] flex flex-col justify-between">
+      <div>
+        {/* Brand Header */}
+        <div className="p-5 border-b-2 border-white/10 flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 bg-[#ec3013] flex items-center justify-center flex-none">
+                <Truck className="w-5 h-5 text-white" />
+              </div>
+              <div className="font-heading font-extrabold text-xl tracking-tight">MarsCargo</div>
+            </div>
+            <div className="mt-1 text-[10px] tracking-widest uppercase text-white/45 font-semibold">
+              Partner B2B Portal
+            </div>
           </div>
-          <div className="font-heading font-extrabold text-xl tracking-tight">MarsCargo</div>
-        </div>
-        <div className="mt-1 text-[10px] tracking-widest uppercase text-white/45 font-semibold">
-          Partner B2B Portal
-        </div>
-      </div>
 
-      {/* Navigation Links */}
-      <nav className="flex-1 p-3 flex flex-col gap-1 overflow-y-auto">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 text-sm font-semibold transition-colors border-l-4 ${
-                isActive
-                  ? 'text-white bg-[#ec3013]/20 border-[#ec3013]'
-                  : 'text-white/65 hover:text-white hover:bg-white/5 border-transparent'
-              }`
-            }
-          >
-            <item.icon className="w-4 h-4 flex-none" />
-            {item.label}
-          </NavLink>
-        ))}
-      </nav>
+          {/* Close button for mobile drawer */}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="md:hidden text-white/70 hover:text-white p-1"
+              aria-label="Tutup menu"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          )}
+        </div>
+
+        {/* Navigation Links */}
+        <nav className="p-3 flex flex-col gap-1 overflow-y-auto">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              onClick={onClose}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 text-sm font-semibold transition-colors border-l-4 ${
+                  isActive
+                    ? 'text-white bg-[#ec3013]/20 border-[#ec3013]'
+                    : 'text-white/65 hover:text-white hover:bg-white/5 border-transparent'
+                }`
+              }
+            >
+              <item.icon className="w-4 h-4 flex-none" />
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
+      </div>
 
       {/* Institution Footer */}
       <div className="p-4 border-t-2 border-white/10 bg-white/5">
@@ -64,5 +85,27 @@ export const Sidebar: React.FC = () => {
         </div>
       </div>
     </aside>
+  );
+
+  return (
+    <>
+      {/* Desktop Sidebar (Fixed) */}
+      <div className="hidden md:block w-[248px] flex-none sticky top-0 h-screen z-20">
+        {sidebarContent}
+      </div>
+
+      {/* Mobile Sidebar (Slide-over Drawer with Backdrop) */}
+      {isOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex">
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={onClose}
+          />
+          <div className="relative flex-1 max-w-xs w-full bg-[#2d2b2b] shadow-2xl z-10">
+            {sidebarContent}
+          </div>
+        </div>
+      )}
+    </>
   );
 };

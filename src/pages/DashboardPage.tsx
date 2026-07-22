@@ -60,9 +60,9 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="flex flex-col gap-7">
       {/* Header Row: Title & Project Filter */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-heading font-extrabold mb-1">
+          <h1 className="text-2xl sm:text-3xl font-heading font-extrabold mb-1">
             Ringkasan Pengiriman
           </h1>
           <div className="text-xs text-[#605d5d]">
@@ -70,7 +70,7 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="w-72 flex flex-col gap-1">
+        <div className="w-full sm:w-72 flex flex-col gap-1">
           <label className="text-xs font-semibold text-[#605d5d]">
             Filter Proyek / Kegiatan
           </label>
