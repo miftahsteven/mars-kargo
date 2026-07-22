@@ -1,20 +1,43 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Package, Truck, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { StatMetric } from '../../types/cargo';
+import { cargoService } from '../../services/cargoService';
 
 interface StatCardsProps {
   metrics?: StatMetric[];
+  officerId?: number | string;
+  startDate?: string;
+  endDate?: string;
 }
 
-export const StatCards: React.FC<StatCardsProps> = ({ metrics }) => {
-  const defaultMetrics: StatMetric[] = [
-    { label: 'Menunggu Pickup', value: '48', sub: 'paket siap dijemput', icon: 'package', color: '#605d5d' },
-    { label: 'Dalam Transit', value: '312', sub: 'sedang dikirim', icon: 'truck', color: '#dd2b0f' },
-    { label: 'Selesai', value: '3.684', sub: 'terkirim bulan ini', icon: 'check-circle-2', color: '#7c1405' },
-    { label: 'Berkendala', value: '12', sub: 'perlu tindak lanjut', icon: 'alert-triangle', color: '#ec3013' },
-  ];
+export const StatCards: React.FC<StatCardsProps> = ({
+  metrics: propsMetrics,
+  officerId = 5,
+  startDate = '2026-07-01',
+  endDate = '2026-07-17',
+}) => {
+  const [items, setItems] = useState<StatMetric[]>(propsMetrics || []);
+  const [isLoading, setIsLoading] = useState<boolean>(!propsMetrics);
 
-  const items = metrics || defaultMetrics;
+  useEffect(() => {
+    if (propsMetrics) {
+      setItems(propsMetrics);
+      return;
+    }
+
+    const fetchSummary = async () => {
+      setIsLoading(true);
+      const data = await cargoService.getSummaryMetrics({
+        officer_id: officerId,
+        start_date: startDate,
+        end_date: endDate,
+      });
+      setItems(data);
+      setIsLoading(false);
+    };
+
+    fetchSummary();
+  }, [propsMetrics, officerId, startDate, endDate]);
 
   const renderIcon = (iconName: string, color: string) => {
     switch (iconName) {
@@ -30,6 +53,20 @@ export const StatCards: React.FC<StatCardsProps> = ({ metrics }) => {
         return <Package className="w-4 h-4" style={{ color }} />;
     }
   };
+
+  if (isLoading && items.length === 0) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="card shadow-sm p-4 animate-pulse">
+            <div className="h-3 bg-[#bab6b6] w-24 mb-2"></div>
+            <div className="h-8 bg-[#bab6b6] w-16 mb-2"></div>
+            <div className="h-3 bg-[#bab6b6] w-32"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -13,6 +13,69 @@ const MOCK_PHOTOS = {
 };
 
 export const cargoService = {
+  getSummaryMetrics: async (params?: {
+    officer_id?: number | string;
+    start_date?: string;
+    end_date?: string;
+  }) => {
+    const officerId = params?.officer_id || 5;
+    const startDate = params?.start_date || '2026-07-01';
+    const endDate = params?.end_date || '2026-07-17';
+
+    try {
+      const response = await apiClient.get('', {
+        params: {
+          action: 'get-ringkasan-pengiriman-per-officer',
+          officer_id: officerId,
+          start_date: startDate,
+          end_date: endDate,
+        },
+      });
+
+      if (response.data && response.data.status === 'success' && response.data.data) {
+        const d = response.data.data;
+        return [
+          {
+            label: 'Menunggu Pickup',
+            value: Number(d.menunggu_pickup ?? 0).toLocaleString('id-ID'),
+            sub: 'paket siap dijemput',
+            icon: 'package',
+            color: '#605d5d',
+          },
+          {
+            label: 'Dalam Transit',
+            value: Number(d.dalam_transit ?? 0).toLocaleString('id-ID'),
+            sub: 'sedang dikirim',
+            icon: 'truck',
+            color: '#dd2b0f',
+          },
+          {
+            label: 'Selesai',
+            value: Number(d.selesai ?? 0).toLocaleString('id-ID'),
+            sub: `terkirim (${d.total_volume ? Number(d.total_volume).toLocaleString('id-ID') + ' kg' : 'periode ini'})`,
+            icon: 'check-circle-2',
+            color: '#7c1405',
+          },
+          {
+            label: 'Berkendala',
+            value: Number(d.berkendala ?? 0).toLocaleString('id-ID'),
+            sub: 'perlu tindak lanjut',
+            icon: 'alert-triangle',
+            color: '#ec3013',
+          },
+        ];
+      }
+    } catch (err) {
+      console.warn('Failed to fetch summary metrics from API:', err);
+    }
+
+    return [
+      { label: 'Menunggu Pickup', value: '0', sub: 'paket siap dijemput', icon: 'package', color: '#605d5d' },
+      { label: 'Dalam Transit', value: '0', sub: 'sedang dikirim', icon: 'truck', color: '#dd2b0f' },
+      { label: 'Selesai', value: '20', sub: 'terkirim (24.841 kg)', icon: 'check-circle-2', color: '#7c1405' },
+      { label: 'Berkendala', value: '0', sub: 'perlu tindak lanjut', icon: 'alert-triangle', color: '#ec3013' },
+    ];
+  },
   getMapPins: async (): Promise<MapPin[]> => {
     if (USE_MOCK) {
       return [
