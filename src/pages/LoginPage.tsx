@@ -73,20 +73,13 @@ export const LoginPage: React.FC = () => {
           <div className="mt-8 pt-6 border-t border-white/10 flex flex-col gap-3">
             <div className="flex items-center gap-2 text-xs text-[#ff9783] font-bold">
               <ShieldCheck className="w-4 h-4 text-[#ec3013]" />
-              Sistem Keamanan &amp; Enkripsi B2B Terproteksi
+              Sistem Informasi Eksekutif B2B Terpadu
             </div>
 
-            <div className="p-3 bg-white/5 border border-white/10 text-xs flex flex-col gap-1.5">
-              <div className="flex items-center justify-between text-white/80">
-                <span className="text-[11px] text-white/50">Status Layanan:</span>
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  Sistem Operasional (Online)
-                </span>
-              </div>
-              <div className="text-white/60 text-[11px] leading-relaxed">
-                Gunakan kredensial akun mitra resmi untuk mengakses Executive Information System, pelacakan real-time, transparansi SLA, dan laporan LPJ.
-              </div>
+            <div className="p-3 bg-white/5 border border-white/10 text-xs flex flex-col gap-1">
+              <div className="text-white/45 uppercase tracking-wider text-[10px]">Instansi Mitra Terdaftar:</div>
+              <div className="font-bold text-white mt-0.5">Pusat Pembinaan Bahasa dan Sastra</div>
+              <div className="text-white/60 text-[11px]">Kemendikdasmen RI · Kontrak PKS 2026</div>
             </div>
           </div>
         </div>
