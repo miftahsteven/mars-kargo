@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Truck, ShieldCheck, Building2, Lock, Mail, ArrowRight } from 'lucide-react';
+import { Truck, ShieldCheck, Building2, Lock, User as UserIcon, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [email, setEmail] = useState('admin@kemendikbud.go.id');
-  const [password, setPassword] = useState('••••••••••••');
+  const [username, setUsername] = useState('KIKIMARS');
+  const [password, setPassword] = useState('MarsJakarta');
   const [customerType, setCustomerType] = useState<'government' | 'private'>('government');
   const [rememberMe, setRememberMe] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -16,14 +16,19 @@ export const LoginPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!username.trim()) {
+      setErrorMsg('Username tidak boleh kosong.');
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMsg(null);
 
     try {
-      await login({ email, password, customerType });
+      await login({ username, password, customerType });
       navigate('/dashboard');
     } catch (err: any) {
-      setErrorMsg(err?.message || 'Login gagal. Periksa kembali email dan password Anda.');
+      setErrorMsg(err?.message || 'Login gagal. Periksa kembali username dan password Anda.');
     } finally {
       setIsSubmitting(false);
     }
@@ -53,7 +58,7 @@ export const LoginPage: React.FC = () => {
                 Portal Mitra &amp; Instansi B2B
               </h2>
               <p className="text-sm text-white/70 leading-relaxed">
-                Sistem Informasi Eksekutif pengiriman kargo terpadu untuk pelacakan real-time, transparansi SLA, bukti penerimaan e-POD, dan pelaporan LPJ.
+                Sistem Informasi Eksekutif pengiriman kargo terpadu. Dashboard ini dilindungi dan memerlukan autentikasi resmi dari server MarsCargo.
               </p>
             </div>
           </div>
@@ -61,13 +66,13 @@ export const LoginPage: React.FC = () => {
           <div className="mt-8 pt-6 border-t border-white/10 flex flex-col gap-3">
             <div className="flex items-center gap-2 text-xs text-[#ff9783] font-bold">
               <ShieldCheck className="w-4 h-4 text-[#ec3013]" />
-              Terhubung dengan API Developer Kargo Mars
+              Terhubung dengan API Auth Developer Kargo
             </div>
 
             <div className="p-3 bg-white/5 border border-white/10 text-xs">
-              <div className="text-white/45 uppercase tracking-wider text-[10px]">Instansi Mitra Terdaftar:</div>
-              <div className="font-bold text-white mt-0.5">Pusat Pembinaan Bahasa dan Sastra</div>
-              <div className="text-white/60 text-[11px]">Kemendikdasmen RI</div>
+              <div className="text-white/45 uppercase tracking-wider text-[10px]">API Endpoint Integration:</div>
+              <div className="font-bold text-[#ff9783] mt-0.5 font-mono text-[11px]">https://cargo.marscargo.net/login/auth</div>
+              <div className="text-white/60 text-[11px] mt-0.5">Authorization: KODE_RAHASIA_DASHBOARD_123</div>
             </div>
           </div>
         </div>
@@ -76,7 +81,7 @@ export const LoginPage: React.FC = () => {
         <div className="p-8 flex flex-col justify-center bg-[#f3f2f2]">
           <div className="mb-6">
             <h3 className="text-2xl font-heading font-extrabold text-[#201e1d] m-0">Masuk ke Portal</h3>
-            <p className="text-xs text-[#605d5d] mt-1">Silakan pilih jenis kemitraan dan masukkan kredensial Anda.</p>
+            <p className="text-xs text-[#605d5d] mt-1">Masukkan username &amp; password Anda untuk membuka akses dashboard.</p>
           </div>
 
           {errorMsg && (
@@ -97,7 +102,8 @@ export const LoginPage: React.FC = () => {
                   type="button"
                   onClick={() => {
                     setCustomerType('government');
-                    setEmail('admin@kemendikbud.go.id');
+                    setUsername('KIKIMARS');
+                    setPassword('MarsJakarta');
                   }}
                   className={`py-2 px-3 text-xs font-bold border transition-colors ${
                     customerType === 'government'
@@ -111,7 +117,8 @@ export const LoginPage: React.FC = () => {
                   type="button"
                   onClick={() => {
                     setCustomerType('private');
-                    setEmail('admin@mitralogistik.co.id');
+                    setUsername('KIKIMARS');
+                    setPassword('MarsJakarta');
                   }}
                   className={`py-2 px-3 text-xs font-bold border transition-colors ${
                     customerType === 'private'
@@ -124,18 +131,18 @@ export const LoginPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Email Field */}
+            {/* Username Field */}
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-[#605d5d]">ID Mitra / Email</label>
+              <label className="text-xs font-semibold text-[#605d5d]">Username</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7d7979]" />
+                <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7d7979]" />
                 <input
-                  type="email"
+                  type="text"
                   required
-                  className="input pl-9"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@kemendikbud.go.id"
+                  className="input pl-9 font-semibold"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="KIKIMARS"
                 />
               </div>
             </div>
@@ -151,12 +158,12 @@ export const LoginPage: React.FC = () => {
                   className="input pl-9"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
+                  placeholder="MarsJakarta"
                 />
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password */}
+            {/* Remember Me & Demo Hint */}
             <div className="flex items-center justify-between text-xs my-1">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -168,9 +175,9 @@ export const LoginPage: React.FC = () => {
                 <span className="text-[#605d5d]">Ingat saya</span>
               </label>
 
-              <a href="#forgot" onClick={(e) => { e.preventDefault(); alert('Silakan hubungi Support Developer Cargo Mars untuk reset kata sandi.'); }} className="text-[#ec3013] hover:underline font-semibold">
-                Lupa Kata Sandi?
-              </a>
+              <span className="text-xs text-[#7d7979]">
+                User: <code className="text-[#ec3013] font-bold">KIKIMARS</code> / <code className="text-[#ec3013] font-bold">MarsJakarta</code>
+              </span>
             </div>
 
             {/* Submit Button */}
@@ -180,7 +187,7 @@ export const LoginPage: React.FC = () => {
               className="btn btn-primary w-full py-2.5 text-sm flex items-center justify-center gap-2 mt-2"
             >
               {isSubmitting ? (
-                'Memverifikasi Kredensial...'
+                'Menghubungi API Auth MarsCargo...'
               ) : (
                 <>
                   Masuk ke B2B Portal

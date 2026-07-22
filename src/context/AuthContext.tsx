@@ -22,20 +22,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (existingUser) {
       setUser(existingUser);
     } else {
-      // Default initial user for instant preview
-      const defaultUser: User = {
-        id: 'usr-88210',
-        name: 'Pusat Bahasa',
-        email: 'admin@kemendikbud.go.id',
-        role: 'Admin Pengiriman',
-        partnerInstitution: 'Pusat Pembinaan Bahasa dan Sastra',
-        institutionSub: 'Kemendikdasmen RI',
-        avatar: 'PB',
-        customerType: 'government',
-      };
-      setUser(defaultUser);
-      localStorage.setItem('marscargo_user', JSON.stringify(defaultUser));
-      localStorage.setItem('marscargo_token', 'mock-token-2026');
+      setUser(null);
     }
     setIsLoading(false);
   }, []);
@@ -63,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       customerType: newType,
       partnerInstitution: newType === 'government' ? 'Pusat Pembinaan Bahasa dan Sastra' : 'PT Mitra Logistik Pratama',
       institutionSub: newType === 'government' ? 'Kemendikdasmen RI' : 'Mitra Corporate B2B',
-      name: newType === 'government' ? 'Pusat Bahasa' : 'PT Mitra Logistik',
+      name: newType === 'government' ? 'KIKIMARS (Pusat Bahasa)' : 'PT Mitra Logistik',
     };
     setUser(updatedUser);
     localStorage.setItem('marscargo_user', JSON.stringify(updatedUser));
