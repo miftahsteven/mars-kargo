@@ -43,10 +43,6 @@ export const authService = {
       }
     } catch (err: any) {
       console.warn('Network call to https://cargo.marscargo.net/login/auth handled:', err.message);
-      // Validate credentials if fallback is needed
-      if (params.username.trim().toUpperCase() !== 'KIKIMARS' && params.username.trim() !== 'admin') {
-        // Still allow demo login if username is provided
-      }
     }
 
     const isGov = params.customerType !== 'private';
@@ -70,10 +66,20 @@ export const authService = {
   logout: async (): Promise<void> => {
     localStorage.removeItem('marscargo_token');
     localStorage.removeItem('marscargo_user');
+    localStorage.clear();
   },
 
   getCurrentUser: (): User | null => {
+    const token = localStorage.getItem('marscargo_token');
     const raw = localStorage.getItem('marscargo_user');
+
+    // Invalidate legacy prototype tokens stored in browser
+    if (!token || token === 'mock-token-2026' || token === 'mock-jwt-token-mars-cargo-b2b-2026') {
+      localStorage.removeItem('marscargo_token');
+      localStorage.removeItem('marscargo_user');
+      return null;
+    }
+
     if (!raw) return null;
     try {
       return JSON.parse(raw);

@@ -35,14 +35,21 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#2d2b2b] flex items-center justify-center p-4 font-body">
-      <div className="w-full max-w-4xl bg-[#f3f2f2] border-2 border-[#201e1d]/30 grid grid-cols-1 md:grid-cols-2 shadow-2xl overflow-hidden">
-        
+    <div
+      className="min-h-screen relative flex items-center justify-center p-4 font-body bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: `url('/login-bg.png')` }}
+    >
+      {/* Dark overlay for contrast and atmosphere */}
+      <div className="absolute inset-0 bg-black/65 backdrop-blur-[2px] z-0" />
+
+      {/* Main Login Box */}
+      <div className="relative z-10 w-full max-w-4xl bg-[#f3f2f2]/95 backdrop-blur-md border-2 border-[#201e1d]/40 grid grid-cols-1 md:grid-cols-2 shadow-2xl overflow-hidden">
+
         {/* Left Branding Column */}
-        <div className="bg-[#2d2b2b] text-white p-8 flex flex-col justify-between border-b-2 md:border-b-0 md:border-r-2 border-white/10">
+        <div className="bg-[#2d2b2b]/90 text-white p-8 flex flex-col justify-between border-b-2 md:border-b-0 md:border-r-2 border-white/10">
           <div>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-[#ec3013] flex items-center justify-center flex-none">
+              <div className="w-10 h-10 bg-[#ec3013] flex items-center justify-center flex-none shadow-md">
                 <Truck className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -66,13 +73,20 @@ export const LoginPage: React.FC = () => {
           <div className="mt-8 pt-6 border-t border-white/10 flex flex-col gap-3">
             <div className="flex items-center gap-2 text-xs text-[#ff9783] font-bold">
               <ShieldCheck className="w-4 h-4 text-[#ec3013]" />
-              Terhubung dengan API Auth Developer Kargo
+              Sistem Keamanan &amp; Enkripsi B2B Terproteksi
             </div>
 
-            <div className="p-3 bg-white/5 border border-white/10 text-xs">
-              <div className="text-white/45 uppercase tracking-wider text-[10px]">API Endpoint Integration:</div>
-              <div className="font-bold text-[#ff9783] mt-0.5 font-mono text-[11px]">https://cargo.marscargo.net/login/auth</div>
-              <div className="text-white/60 text-[11px] mt-0.5">Authorization: KODE_RAHASIA_DASHBOARD_123</div>
+            <div className="p-3 bg-white/5 border border-white/10 text-xs flex flex-col gap-1.5">
+              <div className="flex items-center justify-between text-white/80">
+                <span className="text-[11px] text-white/50">Status Layanan:</span>
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  Sistem Operasional (Online)
+                </span>
+              </div>
+              <div className="text-white/60 text-[11px] leading-relaxed">
+                Gunakan kredensial akun mitra resmi untuk mengakses Executive Information System, pelacakan real-time, transparansi SLA, dan laporan LPJ.
+              </div>
             </div>
           </div>
         </div>
@@ -105,11 +119,10 @@ export const LoginPage: React.FC = () => {
                     setUsername('KIKIMARS');
                     setPassword('MarsJakarta');
                   }}
-                  className={`py-2 px-3 text-xs font-bold border transition-colors ${
-                    customerType === 'government'
-                      ? 'bg-[#ec3013] text-white border-[#ec3013]'
-                      : 'bg-[#eae9e9] text-[#201e1d] border-[#201e1d]/30 hover:border-[#ec3013]'
-                  }`}
+                  className={`py-2 px-3 text-xs font-bold border transition-colors ${customerType === 'government'
+                    ? 'bg-[#ec3013] text-white border-[#ec3013]'
+                    : 'bg-[#eae9e9] text-[#201e1d] border-[#201e1d]/30 hover:border-[#ec3013]'
+                    }`}
                 >
                   Pemerintah (APBN)
                 </button>
@@ -120,11 +133,10 @@ export const LoginPage: React.FC = () => {
                     setUsername('KIKIMARS');
                     setPassword('MarsJakarta');
                   }}
-                  className={`py-2 px-3 text-xs font-bold border transition-colors ${
-                    customerType === 'private'
-                      ? 'bg-[#ec3013] text-white border-[#ec3013]'
-                      : 'bg-[#eae9e9] text-[#201e1d] border-[#201e1d]/30 hover:border-[#ec3013]'
-                  }`}
+                  className={`py-2 px-3 text-xs font-bold border transition-colors ${customerType === 'private'
+                    ? 'bg-[#ec3013] text-white border-[#ec3013]'
+                    : 'bg-[#eae9e9] text-[#201e1d] border-[#201e1d]/30 hover:border-[#ec3013]'
+                    }`}
                 >
                   Swasta (Corporate)
                 </button>
@@ -175,9 +187,9 @@ export const LoginPage: React.FC = () => {
                 <span className="text-[#605d5d]">Ingat saya</span>
               </label>
 
-              <span className="text-xs text-[#7d7979]">
+              {/* <span className="text-xs text-[#7d7979]">
                 User: <code className="text-[#ec3013] font-bold">KIKIMARS</code> / <code className="text-[#ec3013] font-bold">MarsJakarta</code>
-              </span>
+              </span> */}
             </div>
 
             {/* Submit Button */}
