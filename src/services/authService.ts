@@ -5,6 +5,8 @@ export interface LoginParams {
   username: string;
   password?: string;
   customerType?: 'government' | 'private';
+  captchaToken?: string;
+  captchaSecret?: string;
 }
 
 const LOGIN_API_URL = 'https://cargo.marscargo.net/login/auth';
@@ -23,6 +25,8 @@ export const authService = {
         {
           username: params.username,
           password: params.password,
+          captchaToken: params.captchaToken,
+          captchaSecret: params.captchaSecret || '6LcnTV8tAAAAAKoAuE0mEfCCMhSvODp_UtrnZMAZ',
         },
         {
           headers: {

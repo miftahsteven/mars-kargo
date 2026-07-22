@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Truck, ShieldCheck, Building2, Lock, User as UserIcon, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { CaptchaWidget } from '../components/common/CaptchaWidget';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('MarsJakarta');
   const [customerType, setCustomerType] = useState<'government' | 'private'>('government');
   const [rememberMe, setRememberMe] = useState(true);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -21,11 +23,22 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
+    if (!captchaToken) {
+      setErrorMsg('Harap selesaikan verifikasi Captcha terlebih dahulu.');
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMsg(null);
 
     try {
-      await login({ username, password, customerType });
+      await login({
+        username,
+        password,
+        customerType,
+        captchaToken,
+        captchaSecret: '6LcnTV8tAAAAAKoAuE0mEfCCMhSvODp_UtrnZMAZ',
+      });
       navigate('/dashboard');
     } catch (err: any) {
       setErrorMsg(err?.message || 'Login gagal. Periksa kembali username dan password Anda.');
@@ -169,7 +182,7 @@ export const LoginPage: React.FC = () => {
             </div>
 
             {/* Remember Me & Demo Hint */}
-            <div className="flex items-center justify-between text-xs my-1">
+            <div className="flex items-center justify-between text-xs my-0.5">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -184,6 +197,17 @@ export const LoginPage: React.FC = () => {
                 User: <code className="text-[#ec3013] font-bold">KIKIMARS</code> / <code className="text-[#ec3013] font-bold">MarsJakarta</code>
               </span> */}
             </div>
+
+            {/* Captcha Widget Integration */}
+            <CaptchaWidget
+              siteKey="6LcnTV8tAAAAANWRR5XTIaJB-hxMhMv9r4m8v8t-"
+              onVerify={(token) => {
+                setCaptchaToken(token);
+                setErrorMsg(null);
+              }}
+              onExpired={() => setCaptchaToken(null)}
+              className="my-1"
+            />
 
             {/* Submit Button */}
             <button
