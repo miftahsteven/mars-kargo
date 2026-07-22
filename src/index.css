@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg: #f3f2f2;
+    --color-surface: #eae9e9;
+    --color-text: #201e1d;
+    --color-accent: #ec3013;
+    --color-accent-2: #e15b47;
+    --color-divider: rgba(32, 30, 29, 0.25);
+
+    --color-neutral-100: #f8f4f4;
+    --color-neutral-200: #eae7e7;
+    --color-neutral-300: #d7d3d3;
+    --color-neutral-400: #bab6b6;
+    --color-neutral-500: #9b9797;
+    --color-neutral-600: #7d7979;
+    --color-neutral-700: #605d5d;
+    --color-neutral-800: #444141;
+    --color-neutral-900: #2d2b2b;
+
+    --font-heading: 'Archivo', system-ui, sans-serif;
+    --font-body: 'Archivo', system-ui, sans-serif;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-body);
+    margin: 0;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 800;
+  }
+}
+
+/* Custom Component Classes from Modernist Design Tokens */
+.btn {
+  @apply inline-flex items-center justify-center gap-1.5 cursor-pointer font-heading font-extrabold text-sm leading-tight text-[#201e1d] bg-transparent border border-transparent px-4 py-2 transition-all disabled:opacity-45 disabled:cursor-not-allowed;
+}
+
+.btn-primary {
+  @apply bg-[#ec3013] text-white hover:bg-[#dd2b0f] active:bg-[#ae1800];
+}
+
+.btn-secondary {
+  @apply border-[#201e1d]/30 hover:bg-[#201e1d]/10 active:bg-[#201e1d]/20;
+}
+
+.btn-ghost {
+  @apply text-[#ec3013] px-2 hover:bg-[#ec3013]/10 active:bg-[#ec3013]/20;
+}
+
+.btn-icon {
+  @apply w-9 h-9 p-0 justify-center;
+}
+
+.card {
+  @apply flex flex-col gap-2 p-3.5 bg-[#eae9e9] border border-black/10;
+}
+
+.card-kicker {
+  @apply text-[10px] tracking-widest uppercase text-[#ec3013] font-bold;
+}
+
+.card-title {
+  @apply font-heading font-extrabold text-lg leading-snug;
+}
+
+.card-meta {
+  @apply flex items-center gap-1.5 text-xs text-[#201e1d]/60;
+}
+
+.input {
+  @apply w-full min-h-[36px] px-2.5 py-1.5 font-sans text-sm text-[#201e1d] bg-[#eae9e9] border border-[#201e1d]/30 outline-none transition-colors hover:border-[#201e1d]/50 focus:border-[#ec3013];
+}
+
+.tag {
+  @apply inline-flex items-center text-[11px] tracking-wide px-2.5 py-0.5 font-semibold;
+}
+
+.tag-accent {
+  @apply bg-[#fff2ef] text-[#7c1405];
+}
+
+.tag-neutral {
+  @apply bg-[#f8f4f4] text-[#444141];
+}
+
+.tag-outline {
+  @apply border border-[#ec3013] text-[#ec3013];
+}
+
+.table {
+  @apply w-full border-collapse text-sm;
+}
+
+.table th {
+  @apply text-left text-[11px] tracking-widest uppercase text-[#201e1d]/60 p-2 border-b-2 border-[#201e1d]/25 font-bold;
+}
+
+.table td {
+  @apply p-2 border-b border-[#201e1d]/20;
+}
+
+.table tbody tr:hover {
+  @apply bg-[#201e1d]/5;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #bab6b6;
+}
