@@ -66,7 +66,7 @@ export const DashboardPage: React.FC = () => {
             Ringkasan Pengiriman
           </h1>
           <div className="text-xs text-[#605d5d]">
-            Periode: 1–17 Juli 2026 · Kontrak No. 042/PKS/KEMENDIKDASMEN/2026
+            Periode: Semua Periode · Kontrak No. 042/PKS/KEMENDIKDASMEN/2026
           </div>
         </div>
 
@@ -92,9 +92,13 @@ export const DashboardPage: React.FC = () => {
       <StatCards />
 
       {/* Geographic Drill Down & Status / SLA Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4 items-stretch">
-        <GeoDrillDown islands={islands} />
-        <StatusSlaCards />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
+        <div className="lg:col-span-2 min-w-0">
+          <GeoDrillDown islands={islands} />
+        </div>
+        <div className="lg:col-span-1 min-w-0">
+          <StatusSlaCards />
+        </div>
       </div>
 
       {/* Exception Log */}

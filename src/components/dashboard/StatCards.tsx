@@ -10,11 +10,28 @@ interface StatCardsProps {
   endDate?: string;
 }
 
+const formatDate = (date: Date): string => {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+const getDefaultEndDate = (): string => {
+  return formatDate(new Date());
+};
+
+const getDefaultStartDate = (): string => {
+  const date = new Date();
+  date.setDate(date.getDate() - 7);
+  return formatDate(date);
+};
+
 export const StatCards: React.FC<StatCardsProps> = ({
   metrics: propsMetrics,
-  officerId = 5,
-  startDate = '2026-07-01',
-  endDate = '2026-07-17',
+  officerId,
+  startDate,
+  endDate,
 }) => {
   const [items, setItems] = useState<StatMetric[]>(propsMetrics || []);
   const [isLoading, setIsLoading] = useState<boolean>(!propsMetrics);

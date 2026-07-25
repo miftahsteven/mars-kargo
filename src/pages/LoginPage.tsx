@@ -8,8 +8,8 @@ export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [username, setUsername] = useState('KIKIMARS');
-  const [password, setPassword] = useState('MarsJakarta');
+  const [username, setUsername] = useState('DikDasMen');
+  const [password, setPassword] = useState('DikD45m3n@!');
   const [customerType, setCustomerType] = useState<'government' | 'private'>('government');
   const [rememberMe, setRememberMe] = useState(true);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
@@ -122,8 +122,8 @@ export const LoginPage: React.FC = () => {
                   type="button"
                   onClick={() => {
                     setCustomerType('government');
-                    setUsername('KIKIMARS');
-                    setPassword('MarsJakarta');
+                    setUsername('DikDasMen');
+                    setPassword('DikD45m3n@!');
                   }}
                   className={`py-2 px-3 text-xs font-bold border transition-colors ${customerType === 'government'
                     ? 'bg-[#ec3013] text-white border-[#ec3013]'
@@ -136,8 +136,8 @@ export const LoginPage: React.FC = () => {
                   type="button"
                   onClick={() => {
                     setCustomerType('private');
-                    setUsername('KIKIMARS');
-                    setPassword('MarsJakarta');
+                    setUsername('DikDasMen');
+                    setPassword('DikD45m3n@!');
                   }}
                   className={`py-2 px-3 text-xs font-bold border transition-colors ${customerType === 'private'
                     ? 'bg-[#ec3013] text-white border-[#ec3013]'
@@ -160,7 +160,7 @@ export const LoginPage: React.FC = () => {
                   className="input pl-9 font-semibold"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="KIKIMARS"
+                  placeholder="DikDasMen"
                 />
               </div>
             </div>
@@ -176,7 +176,7 @@ export const LoginPage: React.FC = () => {
                   className="input pl-9"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="MarsJakarta"
+                  placeholder="DikD45m3n@!"
                 />
               </div>
             </div>

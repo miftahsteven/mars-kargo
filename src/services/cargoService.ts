@@ -1,5 +1,6 @@
-import { IslandData, ExceptionItem, PodItem, InvoiceItem, ShipmentItem, MapPin, TrackingSearchResult } from '../types/cargo';
+import { IslandData, ExceptionItem, PodItem, InvoiceItem, ShipmentItem, MapPin, TrackingSearchResult, StatMetric } from '../types/cargo';
 import { apiClient } from './api';
+import { authService } from './authService';
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK_API !== 'false';
 
@@ -12,67 +13,135 @@ const MOCK_PHOTOS = {
   podFragile: 'https://images.unsplash.com/photo-1580674684081-7617fbf3d745?q=80&w=400&auto=format&fit=crop',
 };
 
+const formatDate = (date: Date): string => {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+const getDefaultEndDate = (): string => formatDate(new Date());
+const getDefaultStartDate = (): string => {
+  const d = new Date();
+  d.setDate(d.getDate() - 7);
+  return formatDate(d);
+};
+
+export interface SummaryMetricsRaw {
+  menunggu_pickup: number;
+  persentase_menunggu_pickup: number;
+  dalam_transit: number;
+  persentase_dalam_transit: number;
+  selesai: number;
+  persentase_selesai: number;
+  berkendala: number;
+  persentase_berkendala: number;
+  total_volume: number;
+}
+
+let activeSummaryPromise: Promise<SummaryMetricsRaw | null> | null = null;
+let cachedSummaryParamKey: string = '';
+
 export const cargoService = {
+  getRawSummaryMetrics: async (params?: {
+    officer_id?: number | string;
+    start_date?: string;
+    end_date?: string;
+  }): Promise<SummaryMetricsRaw | null> => {
+    const currentUser = authService.getCurrentUser();
+    const rawUserData = authService.getRawUserData();
+    const loggedInUserId = currentUser?.user_id || rawUserData?.user_id || 886;
+    const officerId = params?.officer_id ?? loggedInUserId;
+
+    const queryParams: Record<string, any> = {
+      action: 'get-ringkasan-pengiriman-per-officer',
+      officer_id: officerId,
+    };
+
+    if (params?.start_date) queryParams.start_date = params.start_date;
+    if (params?.end_date) queryParams.end_date = params.end_date;
+
+    const paramKey = JSON.stringify(queryParams);
+
+    if (activeSummaryPromise && cachedSummaryParamKey === paramKey) {
+      return activeSummaryPromise;
+    }
+
+    cachedSummaryParamKey = paramKey;
+    activeSummaryPromise = (async () => {
+      try {
+        const response = await apiClient.get('', { params: queryParams });
+        if (response.data && response.data.status === 'success' && response.data.data) {
+          const d = response.data.data;
+          return {
+            menunggu_pickup: Number(d.menunggu_pickup ?? 0),
+            persentase_menunggu_pickup: Number(d.persentase_menunggu_pickup ?? 0),
+            dalam_transit: Number(d.dalam_transit ?? 0),
+            persentase_dalam_transit: Number(d.persentase_dalam_transit ?? 0),
+            selesai: Number(d.selesai ?? 0),
+            persentase_selesai: Number(d.persentase_selesai ?? 0),
+            berkendala: Number(d.berkendala ?? 0),
+            persentase_berkendala: Number(d.persentase_berkendala ?? 0),
+            total_volume: Number(d.total_volume ?? 0),
+          };
+        }
+      } catch (err) {
+        console.warn('Failed to fetch raw summary metrics from API:', err);
+      } finally {
+        setTimeout(() => {
+          activeSummaryPromise = null;
+        }, 300);
+      }
+      return null;
+    })();
+
+    return activeSummaryPromise;
+  },
+
   getSummaryMetrics: async (params?: {
     officer_id?: number | string;
     start_date?: string;
     end_date?: string;
-  }) => {
-    const officerId = params?.officer_id || 5;
-    const startDate = params?.start_date || '2026-07-01';
-    const endDate = params?.end_date || '2026-07-17';
+  }): Promise<StatMetric[]> => {
+    const d = await cargoService.getRawSummaryMetrics(params);
 
-    try {
-      const response = await apiClient.get('', {
-        params: {
-          action: 'get-ringkasan-pengiriman-per-officer',
-          officer_id: officerId,
-          start_date: startDate,
-          end_date: endDate,
+    if (d) {
+      return [
+        {
+          label: 'Menunggu Pickup',
+          value: d.menunggu_pickup.toLocaleString('id-ID'),
+          sub: 'paket siap dijemput',
+          icon: 'package',
+          color: '#605d5d',
         },
-      });
-
-      if (response.data && response.data.status === 'success' && response.data.data) {
-        const d = response.data.data;
-        return [
-          {
-            label: 'Menunggu Pickup',
-            value: Number(d.menunggu_pickup ?? 0).toLocaleString('id-ID'),
-            sub: 'paket siap dijemput',
-            icon: 'package',
-            color: '#605d5d',
-          },
-          {
-            label: 'Dalam Transit',
-            value: Number(d.dalam_transit ?? 0).toLocaleString('id-ID'),
-            sub: 'sedang dikirim',
-            icon: 'truck',
-            color: '#dd2b0f',
-          },
-          {
-            label: 'Selesai',
-            value: Number(d.selesai ?? 0).toLocaleString('id-ID'),
-            sub: `terkirim (${d.total_volume ? Number(d.total_volume).toLocaleString('id-ID') + ' kg' : 'periode ini'})`,
-            icon: 'check-circle-2',
-            color: '#7c1405',
-          },
-          {
-            label: 'Berkendala',
-            value: Number(d.berkendala ?? 0).toLocaleString('id-ID'),
-            sub: 'perlu tindak lanjut',
-            icon: 'alert-triangle',
-            color: '#ec3013',
-          },
-        ];
-      }
-    } catch (err) {
-      console.warn('Failed to fetch summary metrics from API:', err);
+        {
+          label: 'Dalam Transit',
+          value: d.dalam_transit.toLocaleString('id-ID'),
+          sub: 'sedang dikirim',
+          icon: 'truck',
+          color: '#dd2b0f',
+        },
+        {
+          label: 'Selesai',
+          value: d.selesai.toLocaleString('id-ID'),
+          sub: `terkirim (${d.total_volume ? d.total_volume.toLocaleString('id-ID') + ' kg' : 'periode ini'})`,
+          icon: 'check-circle-2',
+          color: '#7c1405',
+        },
+        {
+          label: 'Berkendala',
+          value: d.berkendala.toLocaleString('id-ID'),
+          sub: 'perlu tindak lanjut',
+          icon: 'alert-triangle',
+          color: '#ec3013',
+        },
+      ];
     }
 
     return [
       { label: 'Menunggu Pickup', value: '0', sub: 'paket siap dijemput', icon: 'package', color: '#605d5d' },
       { label: 'Dalam Transit', value: '0', sub: 'sedang dikirim', icon: 'truck', color: '#dd2b0f' },
-      { label: 'Selesai', value: '20', sub: 'terkirim (24.841 kg)', icon: 'check-circle-2', color: '#7c1405' },
+      { label: 'Selesai', value: '0', sub: 'terkirim (0 kg)', icon: 'check-circle-2', color: '#7c1405' },
       { label: 'Berkendala', value: '0', sub: 'perlu tindak lanjut', icon: 'alert-triangle', color: '#ec3013' },
     ];
   },
@@ -90,128 +159,136 @@ export const cargoService = {
     return response.data;
   },
 
-  getIslandsData: async (): Promise<IslandData[]> => {
-    if (USE_MOCK) {
-      return [
-        {
-          id: 'sumatera',
-          name: 'Sumatera',
-          volume: 842,
-          provinces: [
-            { name: 'Aceh', volume: 112 },
-            { name: 'Sumatera Utara', volume: 245 },
-            { name: 'Riau', volume: 98 },
-            { name: 'Sumatera Barat', volume: 87 },
-            { name: 'Jambi', volume: 65 },
-            { name: 'Sumatera Selatan', volume: 134 },
-            { name: 'Lampung', volume: 101 },
-          ],
+  getIslandsData: async (params?: { officer_id?: number | string }): Promise<IslandData[]> => {
+    const currentUser = authService.getCurrentUser();
+    const rawUserData = authService.getRawUserData();
+    const loggedInUserId = currentUser?.user_id || rawUserData?.user_id || 886;
+    const officerId = params?.officer_id ?? loggedInUserId;
+
+    try {
+      const response = await apiClient.get('', {
+        params: {
+          action: 'get-pengiriman-per-wilayah',
+          officer_id: officerId,
         },
-        {
-          id: 'jawa',
-          name: 'Jawa',
-          volume: 2140,
-          provinces: [
-            { name: 'DKI Jakarta', volume: 520 },
-            { name: 'Jawa Barat', volume: 610 },
-            { name: 'Jawa Tengah', volume: 480 },
-            { name: 'DI Yogyakarta', volume: 210 },
-            { name: 'Jawa Timur', volume: 320 },
-          ],
-        },
-        {
-          id: 'kalimantan',
-          name: 'Kalimantan',
-          volume: 398,
-          provinces: [
-            { name: 'Kalimantan Barat', volume: 88 },
-            { name: 'Kalimantan Tengah', volume: 64 },
-            { name: 'Kalimantan Selatan', volume: 102 },
-            { name: 'Kalimantan Timur', volume: 110 },
-            { name: 'Kalimantan Utara', volume: 34 },
-          ],
-        },
-        {
-          id: 'sulawesi',
-          name: 'Sulawesi',
-          volume: 276,
-          provinces: [
-            { name: 'Sulawesi Utara', volume: 52 },
-            { name: 'Sulawesi Tengah', volume: 41 },
-            { name: 'Sulawesi Selatan', volume: 118 },
-            { name: 'Sulawesi Tenggara', volume: 38 },
-            { name: 'Gorontalo', volume: 15 },
-            { name: 'Sulawesi Barat', volume: 12 },
-          ],
-        },
-        {
-          id: 'balinusa',
-          name: 'Bali & Nusa Tenggara',
-          volume: 184,
-          provinces: [
-            { name: 'Bali', volume: 76 },
-            { name: 'Nusa Tenggara Barat', volume: 58 },
-            { name: 'Nusa Tenggara Timur', volume: 50 },
-          ],
-        },
-        {
-          id: 'malukupapua',
-          name: 'Maluku & Papua',
-          volume: 96,
-          provinces: [
-            { name: 'Maluku', volume: 22 },
-            { name: 'Maluku Utara', volume: 14 },
-            { name: 'Papua', volume: 35 },
-            { name: 'Papua Barat', volume: 25 },
-          ],
-        },
-      ];
+      });
+
+      if (response.data && response.data.status === 'success' && Array.isArray(response.data.data)) {
+        return response.data.data.map((item: any) => ({
+          id: (item.pulau_nama || 'wilayah').toLowerCase().replace(/\s+/g, '-'),
+          name: item.pulau_nama || 'Lainnya',
+          volume: Number(item.total_pengiriman_pulau ?? 0),
+          provinces: (item.detail_kota || []).map((k: any) => ({
+            name: k.kota_nama || 'Kota/Kab',
+            volume: Number(k.total_pengiriman ?? 0),
+          })),
+        }));
+      }
+    } catch (err) {
+      console.warn('Failed to fetch pengiriman per wilayah from API:', err);
     }
-    const response = await apiClient.get('/cargo/islands-distribution');
-    return response.data;
+
+    // Mock data fallback if network or endpoint error
+    return [
+      {
+        id: 'sumatera',
+        name: 'Sumatera',
+        volume: 7384,
+        provinces: [
+          { name: 'MEDAN', volume: 450 },
+          { name: 'PALEMBANG', volume: 320 },
+          { name: 'PADANG', volume: 210 },
+        ],
+      },
+      {
+        id: 'jawa',
+        name: 'Jawa',
+        volume: 5786,
+        provinces: [
+          { name: 'SAMPANG', volume: 343 },
+          { name: 'CIANJUR', volume: 303 },
+          { name: 'SERANG', volume: 282 },
+        ],
+      },
+      {
+        id: 'sulawesi',
+        name: 'Sulawesi',
+        volume: 3093,
+        provinces: [
+          { name: 'MAKASSAR', volume: 210 },
+          { name: 'MANADO', volume: 140 },
+        ],
+      },
+    ];
   },
 
-  getExceptions: async (): Promise<ExceptionItem[]> => {
-    if (USE_MOCK) {
-      return [
-        {
-          resi: 'MC2607-88231',
-          proyek: 'Distribusi Buku Sastra 2026',
-          issue: 'Alamat Balai Bahasa tutup sementara',
-          lokasi: 'Balai Bahasa Provinsi Riau',
-          since: '2 hari lalu',
+  getExceptions: async (params?: { officer_id?: number | string }): Promise<ExceptionItem[]> => {
+    const currentUser = authService.getCurrentUser();
+    const rawUserData = authService.getRawUserData();
+    const loggedInUserId = currentUser?.user_id || rawUserData?.user_id || 886;
+    const officerId = params?.officer_id ?? loggedInUserId;
+
+    try {
+      const response = await apiClient.get('', {
+        params: {
+          action: 'get-kendala-aktif',
+          officer_id: officerId,
         },
-        {
-          resi: 'MC2607-88452',
-          proyek: 'Pengiriman Kamus Balai Bahasa',
-          issue: 'Nomor telepon penerima tidak aktif',
-          lokasi: 'SMP Negeri 2 Pontianak',
-          since: '1 hari lalu',
-        },
-        {
-          resi: 'MC2607-89011',
-          proyek: 'Distribusi Buku Sastra 2026',
-          issue: 'Cuaca ekstrem — akses jalan terputus',
-          lokasi: 'SD Negeri 5 Kupang',
-          since: '6 jam lalu',
-        },
-      ];
+      });
+
+      if (response.data && response.data.status === 'success' && Array.isArray(response.data.data)) {
+        return response.data.data.map((item: any) => ({
+          resi: item.cons_no || 'RESI-UNKNOWN',
+          proyek: item.project_label || 'Umum',
+          issue: item.kendala_text || 'Terdapat kendala pengiriman',
+          lokasi: item.lokasi_waktu || 'Lokasi tidak diketahui',
+          since: item.raw_date || 'Hari ini',
+        }));
+      }
+    } catch (err) {
+      console.warn('Failed to fetch kendala aktif from API:', err);
     }
-    const response = await apiClient.get('/cargo/exceptions');
-    return response.data;
+
+    return [];
   },
 
-  getPodItems: async (): Promise<PodItem[]> => {
-    if (USE_MOCK) {
-      return [
-        { resi: 'MC2607-87102', lokasi: 'SD Negeri 6 Ambon', tanggal: '14 Jul 2026', photoUrl: MOCK_PHOTOS.podTeam },
-        { resi: 'MC2607-87209', lokasi: 'SMP Negeri 1 Jayapura', tanggal: '14 Jul 2026', photoUrl: MOCK_PHOTOS.podFragile },
-        { resi: 'MC2607-87344', lokasi: 'SD Negeri 3 Palembang', tanggal: '15 Jul 2026', photoUrl: MOCK_PHOTOS.podHandoff2 },
-        { resi: 'MC2607-87450', lokasi: 'SMP Negeri 7 Manado', tanggal: '15 Jul 2026', photoUrl: MOCK_PHOTOS.podHandoff3 },
-      ];
+  getPodItems: async (params?: { officer_id?: number | string; limit?: number }): Promise<PodItem[]> => {
+    const currentUser = authService.getCurrentUser();
+    const rawUserData = authService.getRawUserData();
+    const loggedInUserId = currentUser?.user_id || rawUserData?.user_id || 886;
+    const officerId = params?.officer_id ?? loggedInUserId;
+    const limit = params?.limit ?? 10;
+
+    try {
+      const response = await apiClient.get('', {
+        params: {
+          action: 'get-epod-gallery',
+          officer_id: officerId,
+          limit: limit,
+        },
+      });
+
+      if (response.data && response.data.status === 'success' && Array.isArray(response.data.data)) {
+        return response.data.data.map((item: any) => ({
+          resi: item.cons_no || 'RESI-UNKNOWN',
+          lokasi: item.penerima || item.subtext || 'Lokasi Penerima',
+          tanggal: item.tanggal || 'Hari ini',
+          photoUrl: item.image_url || MOCK_PHOTOS.podHandoff1,
+          penerima: item.penerima,
+          subtext: item.subtext,
+          image_url: item.image_url,
+        }));
+      }
+    } catch (err) {
+      console.warn('Failed to fetch get-epod-gallery from API:', err);
     }
-    const response = await apiClient.get('/cargo/epod');
-    return response.data;
+
+    return [
+      { resi: 'GLN08618', lokasi: 'SD KARYA PUTRA (NPSN:20539175)', tanggal: '06 Jul 2026', photoUrl: MOCK_PHOTOS.podTeam },
+      { resi: 'GLN08611', lokasi: 'SD BAITU ILMIN (NPSN:20531950)', tanggal: '06 Jul 2026', photoUrl: MOCK_PHOTOS.podFragile },
+      { resi: 'GLN08608', lokasi: 'SD BUDI DHARMA (NPSN:20531905)', tanggal: '06 Jul 2026', photoUrl: MOCK_PHOTOS.podHandoff2 },
+      { resi: 'GLN08606', lokasi: 'SD AL - FURQON (NPSN:20531860)', tanggal: '06 Jul 2026', photoUrl: MOCK_PHOTOS.podHandoff3 },
+    ];
   },
 
   getInvoices: async (): Promise<InvoiceItem[]> => {

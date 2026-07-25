@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types/cargo';
 import { authService, LoginParams } from '../services/authService';
+import { secureStorage } from '../utils/secureStorage';
 
 interface AuthContextType {
   user: User | null;
@@ -50,10 +51,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       customerType: newType,
       partnerInstitution: newType === 'government' ? 'Pusat Pembinaan Bahasa dan Sastra' : 'PT Mitra Logistik Pratama',
       institutionSub: newType === 'government' ? 'Kemendikdasmen RI' : 'Mitra Corporate B2B',
-      name: newType === 'government' ? 'KIKIMARS (Pusat Bahasa)' : 'PT Mitra Logistik',
+      name: newType === 'government' ? (user.name || 'KEMENDIKDASMEN') : 'PT Mitra Logistik',
     };
     setUser(updatedUser);
-    localStorage.setItem('marscargo_user', JSON.stringify(updatedUser));
+    secureStorage.setItem('marscargo_user', updatedUser);
   };
 
   return (

@@ -7,6 +7,11 @@ export interface User {
   institutionSub: string;
   avatar: string;
   customerType: 'government' | 'private';
+  user_id?: number | string;
+  username?: string;
+  ph_no?: string;
+  cabang_id?: number | string;
+  rawApiData?: Record<string, any>;
 }
 
 export interface StatMetric {
@@ -43,6 +48,9 @@ export interface PodItem {
   lokasi: string;
   tanggal: string;
   photoUrl: string;
+  penerima?: string;
+  subtext?: string;
+  image_url?: string;
 }
 
 export interface InvoiceItem {
