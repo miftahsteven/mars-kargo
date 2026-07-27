@@ -497,6 +497,126 @@ export const cargoService = {
     });
   },
 
+  getPetaSebaran: async (params?: { officer_id?: number | string }): Promise<MapPin[]> => {
+    const CITY_MAP: Record<string, { lat: number; lng: number }> = {
+      'yogyakarta': { lat: -7.7956, lng: 110.3695 },
+      'sleman': { lat: -7.7156, lng: 110.3556 },
+      'bantul': { lat: -7.8897, lng: 110.3294 },
+      'bandung': { lat: -6.9175, lng: 107.6191 },
+      'surabaya': { lat: -7.2575, lng: 112.7521 },
+      'bali': { lat: -8.4095, lng: 115.1889 },
+      'ubud': { lat: -8.5069, lng: 115.2625 },
+      'denpasar': { lat: -8.6705, lng: 115.2126 },
+      'makassar': { lat: -5.1477, lng: 119.4327 },
+      'aceh': { lat: 5.5483, lng: 95.3193 },
+      'medan': { lat: 3.5952, lng: 98.6722 },
+      'palembang': { lat: -2.9761, lng: 104.7754 },
+      'padang': { lat: -0.9471, lng: 100.4172 },
+      'pekanbaru': { lat: 0.5071, lng: 101.4478 },
+      'lampung': { lat: -5.4500, lng: 105.2667 },
+      'semarang': { lat: -6.9667, lng: 110.4167 },
+      'solo': { lat: -7.5755, lng: 110.8243 },
+      'surakarta': { lat: -7.5755, lng: 110.8243 },
+      'malang': { lat: -7.9666, lng: 112.6326 },
+      'pontianak': { lat: -0.0263, lng: 109.3425 },
+      'banjarmasin': { lat: -3.3167, lng: 114.5900 },
+      'samarinda': { lat: -0.5022, lng: 117.1536 },
+      'balikpapan': { lat: -1.2379, lng: 116.8529 },
+      'manado': { lat: 1.4748, lng: 124.8428 },
+      'ambon': { lat: -3.6554, lng: 128.1906 },
+      'jayapura': { lat: -2.5489, lng: 140.7196 },
+      'belitung': { lat: -2.7412, lng: 107.6688 },
+      'lombok': { lat: -8.6500, lng: 116.3249 },
+      'kupang': { lat: -10.1772, lng: 123.6070 },
+      'bekasi': { lat: -6.2383, lng: 106.9756 },
+      'bogor': { lat: -6.5971, lng: 106.8060 },
+      'depok': { lat: -6.4025, lng: 106.7942 },
+      'tangerang': { lat: -6.1783, lng: 106.6300 },
+      'cikarang': { lat: -6.3060, lng: 107.1578 },
+      'jakarta barat': { lat: -6.1683, lng: 106.7583 },
+      'jakarta timur': { lat: -6.2250, lng: 106.9004 },
+      'jakarta selatan': { lat: -6.2615, lng: 106.8106 },
+      'jakarta utara': { lat: -6.1384, lng: 106.8640 },
+      'jakarta pusat': { lat: -6.1805, lng: 106.8284 },
+    };
+
+    try {
+      let rawData: any[] = [];
+
+      // 1. Try with officer_id if passed
+      if (params?.officer_id) {
+        try {
+          const res = await apiClient.get('', {
+            params: { action: 'get-peta-sebaran', officer_id: params.officer_id },
+          });
+          if (res.data && Array.isArray(res.data.data) && res.data.data.length > 0) {
+            rawData = res.data.data;
+          }
+        } catch (e) {}
+      }
+
+      // 2. If empty, fetch get-peta-sebaran without officer_id
+      if (rawData.length === 0) {
+        const response = await apiClient.get('', {
+          params: { action: 'get-peta-sebaran' },
+        });
+        if (response.data && Array.isArray(response.data.data)) {
+          rawData = response.data.data;
+        }
+      }
+
+      if (rawData.length > 0) {
+        return rawData.map((item: any, index: number) => {
+          const rawStatus = (item.status || '').toString().trim();
+          let normStatus = rawStatus;
+          if (rawStatus.toLowerCase().includes('complete') || rawStatus.toLowerCase().includes('terkirim') || rawStatus.toLowerCase().includes('selesai')) {
+            normStatus = 'Delivered';
+          } else if (rawStatus.toLowerCase().includes('delivery') || rawStatus.toLowerCase().includes('transit') || rawStatus.toLowerCase().includes('proses') || rawStatus.toLowerCase().includes('landed')) {
+            normStatus = 'Dalam Transit';
+          } else if (rawStatus.toLowerCase().includes('pick')) {
+            normStatus = 'Menunggu Pickup';
+          }
+
+          const label = item.label_teks || 'Alamat Penerima';
+          const labelLower = label.toLowerCase();
+
+          let lat = typeof item.lat === 'number' ? item.lat : parseFloat(item.lat || '-6.164889');
+          let lng = typeof item.lon === 'number' ? item.lon : parseFloat(item.lon || '106.87388');
+
+          // City coordinate resolution if default Jakarta coordinates
+          if ((isNaN(lat) || Math.abs(lat - (-6.164889)) < 0.001) && (isNaN(lng) || Math.abs(lng - 106.87388) < 0.001)) {
+            for (const city in CITY_MAP) {
+              if (labelLower.includes(city)) {
+                lat = CITY_MAP[city].lat;
+                lng = CITY_MAP[city].lng;
+                break;
+              }
+            }
+            // Small deterministic offset to scatter pins across city
+            const hash = (index * 37 + (label.length * 13)) % 1000 - 500;
+            lat += (hash * 0.00012);
+            lng += (((index * 59) % 1000 - 500) * 0.00012);
+          }
+
+          const resiNo = item.no_resi && item.no_resi.trim() ? item.no_resi.trim() : `GLN${String(index + 2014).padStart(5, '0')}`;
+
+          return {
+            resi: resiNo,
+            lokasi: label,
+            lat,
+            lng,
+            status: normStatus as any,
+            rawStatus: rawStatus || normStatus,
+            color: normStatus === 'Delivered' ? '#1fa96a' : normStatus === 'Dalam Transit' ? '#e53935' : '#9b9797',
+          };
+        });
+      }
+    } catch (err) {
+      console.warn('Failed to fetch get-peta-sebaran from API:', err);
+    }
+    return [];
+  },
+
   exportLpjCsv: (shipments: ShipmentItem[]) => {
     const header = ['No. Resi', 'Proyek', 'Tanggal Kirim', 'Tujuan', 'Berat/Volume', 'Tarif Kontrak', 'Penerima', 'Waktu Diterima'];
     const csv = [header.join(',')].concat(

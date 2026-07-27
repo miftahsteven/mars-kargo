@@ -104,12 +104,13 @@ export interface GetShipmentsParams {
 export interface MapPin {
   resi: string;
   lokasi: string;
-  x: string;
-  y: string;
+  x?: string;
+  y?: string;
   lng?: number;
   lat?: number;
-  status: 'Delivered' | 'Dalam Transit' | 'Menunggu Pickup';
-  color: string;
+  status: 'Delivered' | 'Dalam Transit' | 'Menunggu Pickup' | string;
+  rawStatus?: string;
+  color?: string;
 }
 
 export interface TrackingSearchResult {
