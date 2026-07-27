@@ -10,14 +10,32 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
     Authorization: API_AUTH_TOKEN,
   },
-  timeout: 10000,
+  timeout: 30000,
+  transformResponse: [
+    (data) => {
+      if (typeof data === 'string') {
+        const jsonStartIndex = data.indexOf('{');
+        if (jsonStartIndex !== -1) {
+          try {
+            return JSON.parse(data.substring(jsonStartIndex));
+          } catch (e) {
+            console.warn('Failed to parse sanitized response:', e);
+          }
+        }
+      }
+      return data;
+    },
+  ],
 });
 
 // Interceptor for auth token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = secureStorage.getItem<string>('marscargo_token') || API_AUTH_TOKEN;
-    if (token && config.headers) {
+    let token = secureStorage.getItem<string>('marscargo_token');
+    if (!token || typeof token !== 'string' || token.includes('[object') || token.trim().length < 5) {
+      token = API_AUTH_TOKEN;
+    }
+    if (config.headers) {
       config.headers.Authorization = token;
     }
     return config;

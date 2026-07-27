@@ -20,7 +20,7 @@ export const DashboardPage: React.FC = () => {
   const [shipments, setShipments] = useState<ShipmentItem[]>([]);
   const [totalShipments, setTotalShipments] = useState<number>(0);
   const [isLoadingShipments, setIsLoadingShipments] = useState<boolean>(false);
-  const [limit, setLimit] = useState<number>(10);
+  const [limit, setLimit] = useState<number>(5);
   const [selectedShipmentResi, setSelectedShipmentResi] = useState<string | null>(null);
   const [detailedShipment, setDetailedShipment] = useState<ShipmentItem | null>(null);
 
@@ -31,10 +31,11 @@ export const DashboardPage: React.FC = () => {
     'Distribusi Modul Literasi 2026',
   ];
 
-  const fetchShipmentData = async (limitVal: number = 500) => {
+  const fetchShipmentData = async (limitVal?: number) => {
     setIsLoadingShipments(true);
     try {
-      const res = await cargoService.getRiwayatPengirimanAll({ limit: limitVal, order: 'DESC' });
+      const fetchLimit = limitVal ?? 100;
+      const res = await cargoService.getRiwayatPengirimanAll({ limit: fetchLimit, order: 'desc' });
       setShipments(res.shipments);
       setTotalShipments(res.totalData);
     } catch (err) {
@@ -48,7 +49,7 @@ export const DashboardPage: React.FC = () => {
     const fetchData = async () => {
       const islData = await cargoService.getIslandsData();
       const exData = await cargoService.getExceptions();
-      const podData = await cargoService.getPodItems();
+      const podData = await cargoService.getPodItems({ limit: 10, order: 'desc' });
       const invData = await cargoService.getInvoices();
 
       setIslands(islData);
@@ -58,7 +59,7 @@ export const DashboardPage: React.FC = () => {
     };
 
     fetchData();
-    fetchShipmentData(500);
+    fetchShipmentData(100);
   }, []);
 
   // When a resi is selected, fetch single detail using cons_no parameter or use cached item
@@ -75,7 +76,7 @@ export const DashboardPage: React.FC = () => {
 
     // Also fetch fresh detail from API via cons_no for 100% full info
     cargoService
-      .getRiwayatPengirimanAll({ cons_no: selectedShipmentResi })
+      .getRiwayatPengirimanAll({ cons_no: selectedShipmentResi, limit: 10, order: 'desc' })
       .then((res) => {
         if (res.shipments && res.shipments.length > 0) {
           setDetailedShipment(res.shipments[0]);
@@ -156,8 +157,11 @@ export const DashboardPage: React.FC = () => {
         onSelectShipment={(resi) => setSelectedShipmentResi(resi)}
         isLoading={isLoadingShipments}
         limit={limit}
-        onLimitChange={(newLimit) => setLimit(newLimit)}
-        onRefresh={() => fetchShipmentData(500)}
+        onLimitChange={(newLimit) => {
+          setLimit(newLimit);
+          fetchShipmentData(newLimit);
+        }}
+        onRefresh={() => fetchShipmentData(100)}
       />
 
       {/* Shipment Detail Modal with Barcode Display */}

@@ -93,6 +93,7 @@ export interface ShipmentItem {
 
 export interface GetShipmentsParams {
   officer_id?: number | string;
+  office_id?: number | string;
   limit?: number;
   order?: string;
   cons_no?: string;

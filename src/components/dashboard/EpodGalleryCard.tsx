@@ -6,12 +6,16 @@ import { cargoService } from '../../services/cargoService';
 interface EpodGalleryCardProps {
   podItems?: PodItem[];
   officerId?: number | string;
+  limit?: number;
+  order?: string;
   onBulkExport?: () => void;
 }
 
 export const EpodGalleryCard: React.FC<EpodGalleryCardProps> = ({
   podItems: propsPodItems,
   officerId,
+  limit = 10,
+  order = 'desc',
   onBulkExport,
 }) => {
   const [data, setData] = useState<PodItem[]>(propsPodItems || []);
@@ -27,13 +31,17 @@ export const EpodGalleryCard: React.FC<EpodGalleryCardProps> = ({
 
     const fetchEpodGallery = async () => {
       setIsLoading(true);
-      const res = await cargoService.getPodItems({ officer_id: officerId, limit: 10 });
+      const res = await cargoService.getPodItems({
+        officer_id: officerId,
+        limit,
+        order,
+      });
       setData(res);
       setIsLoading(false);
     };
 
     fetchEpodGallery();
-  }, [propsPodItems, officerId]);
+  }, [propsPodItems, officerId, limit, order]);
 
   const handleDownload = (pod: PodItem, type: string) => {
     if (!type) return;

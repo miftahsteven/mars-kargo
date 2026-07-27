@@ -28,7 +28,7 @@ export const ShipmentTable: React.FC<ShipmentTableProps> = ({
   selectedProject,
   onSelectShipment,
   isLoading = false,
-  limit = 15,
+  limit = 5,
   onLimitChange,
   onRefresh,
 }) => {
@@ -59,15 +59,19 @@ export const ShipmentTable: React.FC<ShipmentTableProps> = ({
   const totalRecords = totalItems ?? filteredShipments.length;
   const totalPages = Math.max(1, Math.ceil(totalRecords / pageSize));
 
+  // Auto-clamp currentPage if out of bounds (e.g. after filtering)
+  React.useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [totalPages, currentPage]);
+
   // Determine current displayed page slice
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, totalRecords);
   const currentSlice = useMemo(() => {
-    if (shipments.length <= pageSize && !searchTerm) {
-      return shipments;
-    }
     return filteredShipments.slice(startIndex, startIndex + pageSize);
-  }, [shipments, filteredShipments, startIndex, pageSize, searchTerm]);
+  }, [filteredShipments, startIndex, pageSize]);
 
   // Handle Page Changes
   const goToPage = (page: number) => {
@@ -172,6 +176,7 @@ export const ShipmentTable: React.FC<ShipmentTableProps> = ({
               }}
               className="bg-white border border-[#201e1d]/20 px-2 py-1.5 rounded-md text-xs font-bold text-[#201e1d] focus:outline-none cursor-pointer"
             >
+              <option value={5}>5</option>
               <option value={10}>10</option>
               <option value={25}>25</option>
               <option value={50}>50</option>

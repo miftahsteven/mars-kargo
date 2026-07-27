@@ -1,4 +1,4 @@
-import { IslandData, ExceptionItem, PodItem, InvoiceItem, ShipmentItem, MapPin, TrackingSearchResult, StatMetric } from '../types/cargo';
+import { IslandData, ExceptionItem, PodItem, InvoiceItem, ShipmentItem, MapPin, TrackingSearchResult, StatMetric, GetShipmentsParams } from '../types/cargo';
 import { apiClient } from './api';
 import { authService } from './authService';
 
@@ -271,15 +271,40 @@ export const cargoService = {
       });
 
       if (response.data && response.data.status === 'success' && Array.isArray(response.data.data)) {
-        return response.data.data.map((item: any) => ({
-          resi: item.cons_no || 'RESI-UNKNOWN',
-          lokasi: item.penerima || item.subtext || 'Lokasi Penerima',
-          tanggal: item.tanggal || 'Hari ini',
-          photoUrl: item.image_url || MOCK_PHOTOS.podHandoff1,
-          penerima: item.penerima,
-          subtext: item.subtext,
-          image_url: item.image_url,
-        }));
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+        return response.data.data.map((item: any) => {
+          let realTanggal = item.tanggal;
+          if (!realTanggal || realTanggal === '01 Jan 1970' || realTanggal === '1970-01-01') {
+            if (item.image_url) {
+              const match = item.image_url.match(/20\d\d-\d\d-\d\d/);
+              if (match) {
+                const [yyyy, mm, dd] = match[0].split('-');
+                const mIdx = parseInt(mm, 10) - 1;
+                if (mIdx >= 0 && mIdx < 12) {
+                  const dayStr = String(parseInt(dd, 10)).padStart(2, '0');
+                  realTanggal = `${dayStr} ${months[mIdx]} ${yyyy}`;
+                }
+              }
+            }
+          }
+          if (!realTanggal || realTanggal === '01 Jan 1970') {
+            realTanggal = 'Hari ini';
+          }
+
+          const penerimaName = item.penerima || 'Lokasi Penerima';
+          const subTextFormatted = `${penerimaName} · ${realTanggal}`;
+
+          return {
+            resi: item.cons_no || 'RESI-UNKNOWN',
+            lokasi: penerimaName,
+            tanggal: realTanggal,
+            photoUrl: item.image_url || MOCK_PHOTOS.podHandoff1,
+            penerima: penerimaName,
+            subtext: subTextFormatted,
+            image_url: item.image_url,
+          };
+        });
       }
     } catch (err) {
       console.warn('Failed to fetch get-epod-gallery from API:', err);
@@ -305,15 +330,10 @@ export const cargoService = {
     return response.data;
   },
 
-  getRiwayatPengirimanAll: async (params?: {
-    officer_id?: number | string;
-    limit?: number;
-    cons_no?: string;
-    order?: string;
-  }): Promise<{ shipments: ShipmentItem[]; totalData: number }> => {
+  getRiwayatPengirimanAll: async (params?: GetShipmentsParams): Promise<{ shipments: ShipmentItem[]; totalData: number }> => {
     const currentUser = authService.getCurrentUser();
     const rawUserData = authService.getRawUserData();
-    const loggedInUserId = currentUser?.user_id || rawUserData?.user_id || 886;
+    const loggedInOfficeId = currentUser?.cabang_id || rawUserData?.cabang_id || 866;
 
     const queryParams: Record<string, any> = {
       action: 'get-riwayat-pengiriman-all',
@@ -322,16 +342,14 @@ export const cargoService = {
     if (params?.cons_no) {
       queryParams.cons_no = params.cons_no;
     } else {
-      queryParams.officer_id = params?.officer_id ?? loggedInUserId;
+      queryParams.office_id = params?.office_id ?? params?.officer_id ?? loggedInOfficeId;
     }
 
     if (params?.limit !== undefined) {
       queryParams.limit = params.limit;
     }
 
-    if (params?.order) {
-      queryParams.order = params.order;
-    }
+    queryParams.order = params?.order ?? 'desc';
 
     try {
       const response = await apiClient.get('', { params: queryParams });
