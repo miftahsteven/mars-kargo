@@ -25,9 +25,21 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Interceptor for response handling
+// Interceptor for response handling & PHP warning HTML sanitization
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (typeof response.data === 'string') {
+      const jsonStartIndex = response.data.indexOf('{');
+      if (jsonStartIndex !== -1) {
+        try {
+          response.data = JSON.parse(response.data.substring(jsonStartIndex));
+        } catch (e) {
+          console.warn('Failed to parse sanitized JSON response:', e);
+        }
+      }
+    }
+    return response;
+  },
   (error) => {
     if (error.response?.status === 401) {
       secureStorage.removeItem('marscargo_token');
@@ -37,3 +49,4 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+

@@ -68,6 +68,8 @@ export interface StatusTimeline {
 
 export interface ShipmentItem {
   resi: string;
+  barcodeUrl?: string;
+  statusTerakhir?: string;
   proyek: string;
   tglKirim: string;
   tujuan: string;
@@ -88,6 +90,15 @@ export interface ShipmentItem {
   keterangan: string;
   statusTimeline: StatusTimeline[];
 }
+
+export interface GetShipmentsParams {
+  officer_id?: number | string;
+  limit?: number;
+  order?: string;
+  cons_no?: string;
+  page?: number;
+}
+
 
 export interface MapPin {
   resi: string;

@@ -18,7 +18,11 @@ export const DashboardPage: React.FC = () => {
   const [podItems, setPodItems] = useState<PodItem[]>([]);
   const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
   const [shipments, setShipments] = useState<ShipmentItem[]>([]);
+  const [totalShipments, setTotalShipments] = useState<number>(0);
+  const [isLoadingShipments, setIsLoadingShipments] = useState<boolean>(false);
+  const [limit, setLimit] = useState<number>(10);
   const [selectedShipmentResi, setSelectedShipmentResi] = useState<string | null>(null);
+  const [detailedShipment, setDetailedShipment] = useState<ShipmentItem | null>(null);
 
   const projects = [
     'Semua Proyek',
@@ -27,31 +31,65 @@ export const DashboardPage: React.FC = () => {
     'Distribusi Modul Literasi 2026',
   ];
 
+  const fetchShipmentData = async (limitVal: number = 500) => {
+    setIsLoadingShipments(true);
+    try {
+      const res = await cargoService.getRiwayatPengirimanAll({ limit: limitVal, order: 'DESC' });
+      setShipments(res.shipments);
+      setTotalShipments(res.totalData);
+    } catch (err) {
+      console.warn('Failed to load real shipments:', err);
+    } finally {
+      setIsLoadingShipments(false);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       const islData = await cargoService.getIslandsData();
       const exData = await cargoService.getExceptions();
       const podData = await cargoService.getPodItems();
       const invData = await cargoService.getInvoices();
-      const shipData = await cargoService.getShipments();
 
       setIslands(islData);
       setExceptions(exData);
       setPodItems(podData);
       setInvoices(invData);
-      setShipments(shipData);
     };
 
     fetchData();
+    fetchShipmentData(500);
   }, []);
+
+  // When a resi is selected, fetch single detail using cons_no parameter or use cached item
+  useEffect(() => {
+    if (!selectedShipmentResi) {
+      setDetailedShipment(null);
+      return;
+    }
+
+    const found = shipments.find((s) => s.resi === selectedShipmentResi);
+    if (found) {
+      setDetailedShipment(found);
+    }
+
+    // Also fetch fresh detail from API via cons_no for 100% full info
+    cargoService
+      .getRiwayatPengirimanAll({ cons_no: selectedShipmentResi })
+      .then((res) => {
+        if (res.shipments && res.shipments.length > 0) {
+          setDetailedShipment(res.shipments[0]);
+        }
+      })
+      .catch((e) => console.warn('Detail fetch error:', e));
+  }, [selectedShipmentResi, shipments]);
 
   const filteredShipments =
     selectedProject === 'Semua Proyek'
       ? shipments
-      : shipments.filter((s) => s.proyek === selectedProject);
-
-  const selectedShipment =
-    shipments.find((s) => s.resi === selectedShipmentResi) || null;
+      : shipments.filter(
+        (s) => s.proyek === selectedProject || s.jenisBarang === selectedProject
+      );
 
   const handleExportLpj = () => {
     cargoService.exportLpjCsv(filteredShipments);
@@ -110,18 +148,24 @@ export const DashboardPage: React.FC = () => {
       {/* Billing & LPJ Exporter */}
       <BillingLpjCard invoices={invoices} onExportLpj={handleExportLpj} />
 
-      {/* Shipment Table Preview */}
+      {/* Shipment Table Preview with Real Data & Pagination */}
       <ShipmentTable
         shipments={filteredShipments}
+        totalItems={totalShipments || filteredShipments.length}
         selectedProject={selectedProject}
         onSelectShipment={(resi) => setSelectedShipmentResi(resi)}
+        isLoading={isLoadingShipments}
+        limit={limit}
+        onLimitChange={(newLimit) => setLimit(newLimit)}
+        onRefresh={() => fetchShipmentData(500)}
       />
 
-      {/* Shipment Detail Modal */}
+      {/* Shipment Detail Modal with Barcode Display */}
       <ShipmentDetailModal
-        shipment={selectedShipment}
+        shipment={detailedShipment}
         onClose={() => setSelectedShipmentResi(null)}
       />
     </div>
   );
 };
+

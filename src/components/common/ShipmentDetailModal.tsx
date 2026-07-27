@@ -1,5 +1,5 @@
 import React from 'react';
-import { X } from 'lucide-react';
+import { X, Barcode, Copy, Check } from 'lucide-react';
 import { ShipmentItem } from '../../types/cargo';
 import { useAuth } from '../../context/AuthContext';
 
@@ -14,8 +14,25 @@ export const ShipmentDetailModal: React.FC<ShipmentDetailModalProps> = ({
 }) => {
   const { user } = useAuth();
   const isGovernment = user?.customerType === 'government';
+  const [copied, setCopied] = React.useState(false);
 
   if (!shipment) return null;
+
+  const barcodeImg =
+    shipment.barcodeUrl ||
+    (shipment.resi
+      ? `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(
+          shipment.resi
+        )}&code=Code128&translate-esc=true`
+      : '');
+
+  const handleCopyResi = () => {
+    if (shipment.resi) {
+      navigator.clipboard.writeText(shipment.resi);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   return (
     <div
@@ -23,14 +40,16 @@ export const ShipmentDetailModal: React.FC<ShipmentDetailModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="bg-[#f3f2f2] border border-[#201e1d]/30 max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 flex flex-col gap-4 shadow-2xl"
+        className="bg-[#f3f2f2] border border-[#201e1d]/30 max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 flex flex-col gap-4 shadow-2xl rounded-lg"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-[#201e1d]/20 pb-3">
-          <span className="font-heading font-extrabold text-xl">
-            Detail Pengiriman — {shipment.resi}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="font-heading font-extrabold text-xl">
+              Detail Pengiriman — {shipment.resi}
+            </span>
+          </div>
           <button
             className="btn btn-icon btn-ghost text-[#201e1d]"
             onClick={onClose}
@@ -38,6 +57,54 @@ export const ShipmentDetailModal: React.FC<ShipmentDetailModalProps> = ({
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Barcode Display Card */}
+        <div className="bg-white p-4 border border-[#201e1d]/15 rounded-md flex flex-col items-center justify-center gap-2 text-center shadow-xs">
+          <div className="flex items-center justify-between w-full text-xs font-semibold text-[#605d5d] px-1">
+            <span className="flex items-center gap-1.5 font-medium">
+              <Barcode className="w-4 h-4 text-[#ec3013]" />
+              Barcode Pengiriman (Scan untuk Aplikasi Mobile)
+            </span>
+            <button
+              onClick={handleCopyResi}
+              className="flex items-center gap-1 text-[11px] text-[#7c1405] hover:underline font-bold"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-green-600" />
+                  Tersalin!
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5" />
+                  Salin Resi
+                </>
+              )}
+            </button>
+          </div>
+
+          {barcodeImg ? (
+            <div className="p-3 bg-white rounded border border-gray-200 inline-block shadow-inner max-w-full">
+              <img
+                src={barcodeImg}
+                alt={`Barcode ${shipment.resi}`}
+                className="max-h-24 object-contain mx-auto"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(
+                    shipment.resi
+                  )}&code=Code128`;
+                }}
+              />
+            </div>
+          ) : (
+            <div className="text-xs text-gray-500 italic py-3">Barcode tidak tersedia</div>
+          )}
+
+          <div className="text-xs font-mono font-bold tracking-widest text-[#201e1d] bg-gray-100 px-3 py-1 rounded">
+            {shipment.resi}
+          </div>
+        </div>
+
 
         {/* Sender & Recipient */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

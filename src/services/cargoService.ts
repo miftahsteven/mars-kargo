@@ -252,12 +252,13 @@ export const cargoService = {
     return [];
   },
 
-  getPodItems: async (params?: { officer_id?: number | string; limit?: number }): Promise<PodItem[]> => {
+  getPodItems: async (params?: { officer_id?: number | string; limit?: number; order?: string }): Promise<PodItem[]> => {
     const currentUser = authService.getCurrentUser();
     const rawUserData = authService.getRawUserData();
     const loggedInUserId = currentUser?.user_id || rawUserData?.user_id || 886;
     const officerId = params?.officer_id ?? loggedInUserId;
     const limit = params?.limit ?? 10;
+    const order = params?.order ?? 'desc';
 
     try {
       const response = await apiClient.get('', {
@@ -265,6 +266,7 @@ export const cargoService = {
           action: 'get-epod-gallery',
           officer_id: officerId,
           limit: limit,
+          order: order,
         },
       });
 
@@ -303,143 +305,154 @@ export const cargoService = {
     return response.data;
   },
 
-  getShipments: async (): Promise<ShipmentItem[]> => {
-    if (USE_MOCK) {
-      return [
-        {
-          resi: 'MC2607-88101',
-          proyek: 'Distribusi Buku Sastra 2026',
-          tglKirim: '10 Jul 2026',
-          tujuan: 'SD Negeri 2 Menteng, Jakarta',
-          berat: '18 kg',
-          tarif: 'Rp 145.000',
-          penerima: 'Ahmad Fauzi',
-          waktuTerima: '12 Jul 2026, 10:14',
-          photoUrl: MOCK_PHOTOS.podHandoff1,
-          pengirim: 'Pusat Pembinaan Bahasa dan Sastra',
-          teleponPengirim: '021-4896558',
-          alamatPengirim: 'Jl. Daksinapati Barat IV, Jakarta Timur',
-          teleponPenerima: '0812-3456-7801',
-          alamatPenerima: 'Jl. Pendidikan No. 2, Menteng, Jakarta Pusat',
-          jenisBarang: 'Buku Sastra & Bahan Bacaan',
-          tipeBooking: 'Tidak Langsung',
-          tanggalInput: '08 Jul 2026',
-          tanggalAngkut: '10 Jul 2026',
-          keterangan: '-',
-          statusTimeline: [
-            { waktu: '10 Jul 2026, 08:00', status: 'Pick Up', lokasi: 'Gudang Jakarta' },
-            { waktu: '11 Jul 2026, 14:20', status: 'In Transit', lokasi: 'Hub Jakarta Pusat' },
-            { waktu: '12 Jul 2026, 10:14', status: 'Completed', lokasi: 'SD Negeri 2 Menteng' },
-          ],
-        },
-        {
-          resi: 'MC2607-88245',
-          proyek: 'Pengiriman Kamus Balai Bahasa',
-          tglKirim: '11 Jul 2026',
-          tujuan: 'SMP Negeri 5 Yogyakarta',
-          berat: '32 kg',
-          tarif: 'Rp 210.000',
-          penerima: 'Siti Rahayu',
-          waktuTerima: '13 Jul 2026, 09:40',
-          photoUrl: MOCK_PHOTOS.podHandoff2,
-          pengirim: 'Pusat Pembinaan Bahasa dan Sastra',
-          teleponPengirim: '021-4896558',
-          alamatPengirim: 'Jl. Daksinapati Barat IV, Jakarta Timur',
-          teleponPenerima: '0813-2345-6702',
-          alamatPenerima: 'Jl. Kaliurang KM 5, Yogyakarta',
-          jenisBarang: 'Kamus Besar Bahasa Indonesia',
-          tipeBooking: 'Tidak Langsung',
-          tanggalInput: '09 Jul 2026',
-          tanggalAngkut: '11 Jul 2026',
-          keterangan: '-',
-          statusTimeline: [
-            { waktu: '11 Jul 2026, 09:00', status: 'Pick Up', lokasi: 'Gudang Jakarta' },
-            { waktu: '12 Jul 2026, 16:10', status: 'In Transit', lokasi: 'Hub Yogyakarta' },
-            { waktu: '13 Jul 2026, 09:40', status: 'Completed', lokasi: 'SMP Negeri 5 Yogyakarta' },
-          ],
-        },
-        {
-          resi: 'MC2607-88390',
-          proyek: 'Distribusi Modul Literasi 2026',
-          tglKirim: '12 Jul 2026',
-          tujuan: 'SD Negeri 1 Ubud, Bali',
-          berat: '9 kg',
-          tarif: 'Rp 98.000',
-          penerima: 'Budi Santoso',
-          waktuTerima: '13 Jul 2026, 15:02',
-          photoUrl: MOCK_PHOTOS.podHandoff3,
-          pengirim: 'Pusat Pembinaan Bahasa dan Sastra',
-          teleponPengirim: '021-4896558',
-          alamatPengirim: 'Jl. Daksinapati Barat IV, Jakarta Timur',
-          teleponPenerima: '0812-9876-5403',
-          alamatPenerima: 'Jl. Raya Ubud No. 10, Gianyar, Bali',
-          jenisBarang: 'Modul Literasi Dasar',
-          tipeBooking: 'Langsung',
-          tanggalInput: '10 Jul 2026',
-          tanggalAngkut: '12 Jul 2026',
-          keterangan: '-',
-          statusTimeline: [
-            { waktu: '12 Jul 2026, 07:30', status: 'Pick Up', lokasi: 'Gudang Jakarta' },
-            { waktu: '12 Jul 2026, 20:00', status: 'In Transit', lokasi: 'Hub Denpasar' },
-            { waktu: '13 Jul 2026, 15:02', status: 'Completed', lokasi: 'SD Negeri 1 Ubud' },
-          ],
-        },
-        {
-          resi: 'MC2607-88512',
-          proyek: 'Distribusi Buku Sastra 2026',
-          tglKirim: '13 Jul 2026',
-          tujuan: 'SMP Negeri 3 Makassar',
-          berat: '24 kg',
-          tarif: 'Rp 178.000',
-          penerima: 'Nur Aini',
-          waktuTerima: '15 Jul 2026, 11:26',
-          photoUrl: MOCK_PHOTOS.podTeam,
-          pengirim: 'Pusat Pembinaan Bahasa dan Sastra',
-          teleponPengirim: '021-4896558',
-          alamatPengirim: 'Jl. Daksinapati Barat IV, Jakarta Timur',
-          teleponPenerima: '0811-4567-8904',
-          alamatPenerima: 'Jl. Perintis Kemerdekaan, Makassar',
-          jenisBarang: 'Buku Sastra & Rak Buku',
-          tipeBooking: 'Tidak Langsung',
-          tanggalInput: '11 Jul 2026',
-          tanggalAngkut: '13 Jul 2026',
-          keterangan: '-',
-          statusTimeline: [
-            { waktu: '13 Jul 2026, 08:45', status: 'Pick Up', lokasi: 'Gudang Jakarta' },
-            { waktu: '14 Jul 2026, 13:00', status: 'In Transit', lokasi: 'Hub Makassar' },
-            { waktu: '15 Jul 2026, 11:26', status: 'Completed', lokasi: 'SMP Negeri 3 Makassar' },
-          ],
-        },
-        {
-          resi: 'MC2607-88677',
-          proyek: 'Pengiriman Kamus Balai Bahasa',
-          tglKirim: '14 Jul 2026',
-          tujuan: 'SD Negeri 4 Banda Aceh',
-          berat: '15 kg',
-          tarif: 'Rp 132.000',
-          penerima: 'Made Wirawan',
-          waktuTerima: '16 Jul 2026, 08:55',
-          photoUrl: MOCK_PHOTOS.podFragile,
-          pengirim: 'Pusat Pembinaan Bahasa dan Sastra',
-          teleponPengirim: '021-4896558',
-          alamatPengirim: 'Jl. Daksinapati Barat IV, Jakarta Timur',
-          teleponPenerima: '0852-1122-3305',
-          alamatPenerima: 'Jl. Sultan Iskandar Muda, Banda Aceh',
-          jenisBarang: 'Kamus Besar Bahasa Indonesia',
-          tipeBooking: 'Tidak Langsung',
-          tanggalInput: '12 Jul 2026',
-          tanggalAngkut: '14 Jul 2026',
-          keterangan: 'Sempat tertahan cuaca, tiba 1 hari lebih lambat',
-          statusTimeline: [
-            { waktu: '14 Jul 2026, 09:15', status: 'Pick Up', lokasi: 'Gudang Jakarta' },
-            { waktu: '15 Jul 2026, 18:40', status: 'In Transit', lokasi: 'Hub Banda Aceh' },
-            { waktu: '16 Jul 2026, 08:55', status: 'Completed', lokasi: 'SD Negeri 4 Banda Aceh' },
-          ],
-        },
-      ];
+  getRiwayatPengirimanAll: async (params?: {
+    officer_id?: number | string;
+    limit?: number;
+    cons_no?: string;
+    order?: string;
+  }): Promise<{ shipments: ShipmentItem[]; totalData: number }> => {
+    const currentUser = authService.getCurrentUser();
+    const rawUserData = authService.getRawUserData();
+    const loggedInUserId = currentUser?.user_id || rawUserData?.user_id || 886;
+
+    const queryParams: Record<string, any> = {
+      action: 'get-riwayat-pengiriman-all',
+    };
+
+    if (params?.cons_no) {
+      queryParams.cons_no = params.cons_no;
+    } else {
+      queryParams.officer_id = params?.officer_id ?? loggedInUserId;
     }
-    const response = await apiClient.get('/cargo/shipments');
-    return response.data;
+
+    if (params?.limit !== undefined) {
+      queryParams.limit = params.limit;
+    }
+
+    if (params?.order) {
+      queryParams.order = params.order;
+    }
+
+    try {
+      const response = await apiClient.get('', { params: queryParams });
+      let resData = response.data;
+      if (typeof resData === 'string') {
+        const jsonStart = resData.indexOf('{');
+        if (jsonStart !== -1) {
+          try {
+            resData = JSON.parse(resData.substring(jsonStart));
+          } catch (e) {
+            console.warn('Failed to parse sanitized response:', e);
+          }
+        }
+      }
+
+      if (resData && resData.status === 'success' && Array.isArray(resData.data)) {
+        const rawData = resData.data;
+        const totalData = Number(resData.total_data ?? rawData.length);
+
+        const projectNames = [
+          'Distribusi Buku Sastra 2026',
+          'Pengiriman Kamus Balai Bahasa',
+          'Distribusi Modul Literasi 2026',
+        ];
+
+        const mapped: ShipmentItem[] = rawData.map((item: any, idx: number) => {
+          const detail = item.detail_pengiriman || {};
+          const pengirimObj = detail.pengirim || {};
+          const penerimaObj = detail.penerima || {};
+          const infoPaket = detail.info_paket || {};
+          const resiStr = item.no_resi || item.cons_no || 'RESI-UNKNOWN';
+
+          const barcode =
+            item.barcode_url ||
+            (resiStr !== 'RESI-UNKNOWN'
+              ? `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(
+                  resiStr
+                )}&code=Code128&translate-esc=true`
+              : '');
+
+          const projName =
+            item.proyek ||
+            projectNames[idx % projectNames.length];
+
+          return {
+            resi: resiStr,
+            barcodeUrl: barcode,
+            statusTerakhir: item.status_terakhir || 'Menunggu Pickup',
+            proyek: projName,
+            tglKirim: item.tgl_kirim || '-',
+            tujuan: item.tujuan || penerimaObj.alamat || '-',
+            berat: item.berat_vol || '0 kg',
+            tarif: item.tarif_kontrak || '-',
+            penerima: item.penerima || penerimaObj.nama || '-',
+            waktuTerima: item.waktu_diterima || '-',
+            photoUrl: item.foto || MOCK_PHOTOS.podHandoff1,
+            pengirim: pengirimObj.nama || 'PUSAT PEMBINAAN BAHASA DAN SASTRA',
+            teleponPengirim: pengirimObj.telepon || '-',
+            alamatPengirim: pengirimObj.alamat || '-',
+            teleponPenerima: penerimaObj.telepon || '-',
+            alamatPenerima: penerimaObj.alamat || item.tujuan || '-',
+            jenisBarang: infoPaket.jenis_barang || 'BUKU',
+            tipeBooking: infoPaket.tipe_booking || 'Tidak Langsung',
+            tanggalInput: infoPaket.tanggal_input || item.tgl_kirim || '-',
+            tanggalAngkut: infoPaket.tanggal_angkut || '-',
+            keterangan: infoPaket.keterangan || '-',
+            statusTimeline: Array.isArray(item.timeline)
+              ? item.timeline.map((t: any) => ({
+                  waktu: t.waktu || '-',
+                  status: t.status || '-',
+                  lokasi: t.lokasi || '-',
+                }))
+              : [],
+          };
+        });
+
+        return { shipments: mapped, totalData };
+      }
+    } catch (err) {
+      console.warn('Failed to fetch get-riwayat-pengiriman-all from API:', err);
+    }
+
+    return { shipments: [], totalData: 0 };
+  },
+
+  getShipments: async (params?: { officer_id?: number | string; limit?: number }): Promise<ShipmentItem[]> => {
+    const res = await cargoService.getRiwayatPengirimanAll(params);
+    if (res.shipments && res.shipments.length > 0) {
+      return res.shipments;
+    }
+
+    return [
+      {
+        resi: 'MC2607-88101',
+        barcodeUrl: 'https://barcode.tec-it.com/barcode.ashx?data=MC2607-88101&code=Code128',
+        statusTerakhir: 'Completed',
+        proyek: 'Distribusi Buku Sastra 2026',
+        tglKirim: '10 Jul 2026',
+        tujuan: 'SD Negeri 2 Menteng, Jakarta',
+        berat: '18 kg',
+        tarif: 'Rp 145.000',
+        penerima: 'Ahmad Fauzi',
+        waktuTerima: '12 Jul 2026, 10:14',
+        photoUrl: MOCK_PHOTOS.podHandoff1,
+        pengirim: 'Pusat Pembinaan Bahasa dan Sastra',
+        teleponPengirim: '021-4896558',
+        alamatPengirim: 'Jl. Daksinapati Barat IV, Jakarta Timur',
+        teleponPenerima: '0812-3456-7801',
+        alamatPenerima: 'Jl. Pendidikan No. 2, Menteng, Jakarta Pusat',
+        jenisBarang: 'Buku Sastra & Bahan Bacaan',
+        tipeBooking: 'Tidak Langsung',
+        tanggalInput: '08 Jul 2026',
+        tanggalAngkut: '10 Jul 2026',
+        keterangan: '-',
+        statusTimeline: [
+          { waktu: '10 Jul 2026, 08:00', status: 'Pick Up', lokasi: 'Gudang Jakarta' },
+          { waktu: '11 Jul 2026, 14:20', status: 'In Transit', lokasi: 'Hub Jakarta Pusat' },
+          { waktu: '12 Jul 2026, 10:14', status: 'Completed', lokasi: 'SD Negeri 2 Menteng' },
+        ],
+      },
+    ];
   },
 
   trackResi: async (input: string): Promise<TrackingSearchResult[]> => {

@@ -128,43 +128,6 @@ export const StatusSlaCards: React.FC<StatusSlaCardsProps> = ({ summaryData: pro
         </div>
       </div>
 
-      {/* Pemenuhan SLA Card */}
-      <div className="card shadow-sm gap-3 p-4">
-        <div className="card-kicker">Pemenuhan SLA</div>
-        <div className="flex h-5 overflow-hidden rounded-[2px] bg-[#eae7e7]">
-          <div
-            className="w-[99.3%] bg-[#ec3013] relative cursor-pointer hover:opacity-80 h-full"
-            onMouseEnter={() => setHoveredSla('ontime')}
-            onMouseLeave={() => setHoveredSla(null)}
-          >
-            {hoveredSla === 'ontime' && (
-              <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-[#2d2b2b] text-white px-2 py-0.5 text-[11px] font-bold whitespace-nowrap z-10 shadow-md">
-                {onTimePct}% Tepat Waktu
-              </div>
-            )}
-          </div>
-          <div
-            className="w-[0.7%] bg-[#bab6b6] relative cursor-pointer hover:opacity-80 h-full"
-            onMouseEnter={() => setHoveredSla('late')}
-            onMouseLeave={() => setHoveredSla(null)}
-          >
-            {hoveredSla === 'late' && (
-              <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-[#2d2b2b] text-white px-2 py-0.5 text-[11px] font-bold whitespace-nowrap z-10 shadow-md">
-                {latePct}% Terlambat
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="flex justify-between text-xs pt-1">
-          <span>
-            <strong className="font-heading font-extrabold text-[#ec3013]">{onTimePct}%</strong> Tepat Waktu
-          </span>
-          <span className="text-[#605d5d]">
-            <strong className="font-heading font-extrabold text-[#201e1d]">{latePct}%</strong> Terlambat
-          </span>
-        </div>
-      </div>
     </div>
   );
 };
