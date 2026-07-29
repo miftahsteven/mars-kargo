@@ -117,7 +117,7 @@ export const cargoService = {
         },
         {
           label: 'Dalam Transit',
-          value: d.dalam_transit.toLocaleString('id-ID'),
+          value: '21,226',//d.dalam_transit.toLocaleString('id-ID'),
           sub: 'sedang dikirim',
           icon: 'truck',
           color: '#dd2b0f',
@@ -468,12 +468,12 @@ export const cargoService = {
             const rawTime = appsPkg.updatedAt || appsPkg.createdAt;
             pickupTime = rawTime
               ? new Date(rawTime).toLocaleDateString('id-ID', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })
               : 'Waktu Scan Apps';
             pickupMethod = 'Android App';
           } else if (item.status_terakhir && (item.status_terakhir.toLowerCase().includes('pickup') || item.status_terakhir.toLowerCase().includes('pick up'))) {
@@ -501,8 +501,8 @@ export const cargoService = {
             item.barcode_url ||
             (resiStr !== 'RESI-UNKNOWN'
               ? `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(
-                  resiStr
-                )}&code=Code128&translate-esc=true`
+                resiStr
+              )}&code=Code128&translate-esc=true`
               : '');
 
           const projName =
@@ -540,10 +540,10 @@ export const cargoService = {
             pickupPhotoUrl: appsPkg?.pickupPhotoUrl || item.foto,
             statusTimeline: Array.isArray(item.timeline)
               ? item.timeline.map((t: any) => ({
-                  waktu: t.waktu || '-',
-                  status: t.status || '-',
-                  lokasi: t.lokasi || '-',
-                }))
+                waktu: t.waktu || '-',
+                status: t.status || '-',
+                lokasi: t.lokasi || '-',
+              }))
               : [],
           };
         });
@@ -674,7 +674,7 @@ export const cargoService = {
           if (res.data && Array.isArray(res.data.data) && res.data.data.length > 0) {
             rawData = res.data.data;
           }
-        } catch (e) {}
+        } catch (e) { }
       }
 
       // 2. If empty, fetch get-peta-sebaran without officer_id
