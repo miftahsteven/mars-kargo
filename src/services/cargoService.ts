@@ -447,17 +447,24 @@ export const cargoService = {
           const cleanResiUpper = String(resiStr).trim().toUpperCase();
           const appsPkg = appsPackagesMap[cleanResiUpper];
 
-          const isScannedViaApps = !!(
-            appsPkg &&
-            (appsPkg.courierId || appsPkg.pickupPhotoUrl || appsPkg.scanLat || appsPkg.status === 'Dalam Transit' || appsPkg.status === 'Terkirim' || appsPkg.status === 'Berkendala')
-          );
+          const isScannedViaApps = !!appsPkg;
 
           let courierName = '-';
           let pickupTime = '-';
           let pickupMethod = '-';
 
           if (isScannedViaApps) {
-            courierName = appsPkg.courier?.fullName || appsPkg.courierName || appsPkg.courierId || 'Kurir Apps';
+            const rawCourier =
+              appsPkg.courierName ||
+              appsPkg.courier?.fullName ||
+              appsPkg.courier?.email ||
+              appsPkg.courierId;
+
+            if (rawCourier && rawCourier !== 'null' && rawCourier !== 'undefined') {
+              courierName = rawCourier;
+            } else {
+              courierName = 'Kurir Apps';
+            }
             const rawTime = appsPkg.updatedAt || appsPkg.createdAt;
             pickupTime = rawTime
               ? new Date(rawTime).toLocaleDateString('id-ID', {
