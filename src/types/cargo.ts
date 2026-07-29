@@ -89,6 +89,15 @@ export interface ShipmentItem {
   tanggalAngkut: string;
   keterangan: string;
   statusTimeline: StatusTimeline[];
+
+  // Mobile App Scanning & Courier Pickup Info
+  isScannedViaApps?: boolean;
+  courierName?: string;
+  pickupTime?: string;
+  pickupMethod?: 'Android App' | 'Manual Dashboard' | string;
+  latitude?: number;
+  longitude?: number;
+  pickupPhotoUrl?: string;
 }
 
 export interface GetShipmentsParams {

@@ -1,4 +1,5 @@
 import { IslandData, ExceptionItem, PodItem, InvoiceItem, ShipmentItem, MapPin, TrackingSearchResult, StatMetric, GetShipmentsParams } from '../types/cargo';
+import axios from 'axios';
 import { apiClient } from './api';
 import { authService } from './authService';
 
@@ -159,17 +160,20 @@ export const cargoService = {
     return response.data;
   },
 
-  getIslandsData: async (params?: { officer_id?: number | string }): Promise<IslandData[]> => {
+  getIslandsData: async (params?: { officer_id?: number | string; office_id?: number | string }): Promise<IslandData[]> => {
     const currentUser = authService.getCurrentUser();
     const rawUserData = authService.getRawUserData();
     const loggedInUserId = currentUser?.user_id || rawUserData?.user_id || 886;
+    const loggedInCabangId = currentUser?.cabang_id || rawUserData?.cabang_id || 846;
     const officerId = params?.officer_id ?? loggedInUserId;
+    const officeId = params?.office_id ?? loggedInCabangId;
 
     try {
       const response = await apiClient.get('', {
         params: {
           action: 'get-pengiriman-per-wilayah',
           officer_id: officerId,
+          office_id: officeId,
         },
       });
 
@@ -222,17 +226,60 @@ export const cargoService = {
     ];
   },
 
-  getExceptions: async (params?: { officer_id?: number | string }): Promise<ExceptionItem[]> => {
+  getExceptions: async (params?: { officer_id?: number | string; office_id?: number | string }): Promise<ExceptionItem[]> => {
     const currentUser = authService.getCurrentUser();
     const rawUserData = authService.getRawUserData();
     const loggedInUserId = currentUser?.user_id || rawUserData?.user_id || 886;
+    const loggedInCabangId = currentUser?.cabang_id || rawUserData?.cabang_id || 846;
     const officerId = params?.officer_id ?? loggedInUserId;
+    const officeId = params?.office_id ?? loggedInCabangId;
 
+    // 1. Integrasi data kendala aktif dari Mobile Apps Backend (Prisma DB /api/packages)
+    try {
+      const backendResponse = await axios.get('https://apps-api.marscargo.net/api/packages', { timeout: 8000 });
+      if (
+        backendResponse.data &&
+        (backendResponse.data.success || backendResponse.data.status === 'success') &&
+        Array.isArray(backendResponse.data.data)
+      ) {
+        const rawPackages: any[] = backendResponse.data.data;
+        const kendalaItems = rawPackages.filter((item: any) => {
+          const statusLower = String(item.status || '').toLowerCase();
+          const notesUpper = String(item.notes || '').toUpperCase();
+          return statusLower.includes('kendala') || notesUpper.includes('KENDALA');
+        });
+
+        if (kendalaItems.length > 0) {
+          return kendalaItems.map((item: any) => {
+            const rawNotes = String(item.notes || 'Terdapat kendala pengiriman dilaporkan kurir');
+            const cleanIssue = rawNotes.replace(/^(KENDALA:\s*)+/i, '').trim();
+
+            const dateStr = item.updatedAt || item.createdAt;
+            const formattedDate = dateStr
+              ? new Date(dateStr).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+              : 'Hari ini';
+
+            return {
+              resi: item.resi || 'RESI-UNKNOWN',
+              proyek: item.category ? `Distribusi ${item.category}` : 'Distribusi Buku 2026',
+              issue: cleanIssue || 'Terdapat kendala pengiriman dilaporkan kurir',
+              lokasi: item.recipientAddress ? `${item.recipientName} (${item.recipientAddress.replace(/[\r\n]+/g, ', ')})` : (item.recipientName || 'Lokasi tidak diketahui'),
+              since: formattedDate,
+            };
+          });
+        }
+      }
+    } catch (backendErr) {
+      console.warn('Mobile apps backend packages fetch notice:', backendErr);
+    }
+
+    // 2. Fallback ke endpoint legacy get-kendala-aktif (Legacy API)
     try {
       const response = await apiClient.get('', {
         params: {
           action: 'get-kendala-aktif',
           officer_id: officerId,
+          office_id: officeId,
         },
       });
 
@@ -365,6 +412,21 @@ export const cargoService = {
         }
       }
 
+      // 2. Integrasi data paket dari Mobile Apps Backend (Prisma DB /api/packages)
+      let appsPackagesMap: Record<string, any> = {};
+      try {
+        const appsRes = await axios.get('https://apps-api.marscargo.net/api/packages', { timeout: 8000 });
+        if (appsRes.data && (appsRes.data.success || appsRes.data.status === 'success') && Array.isArray(appsRes.data.data)) {
+          appsRes.data.data.forEach((p: any) => {
+            if (p.resi) {
+              appsPackagesMap[String(p.resi).trim().toUpperCase()] = p;
+            }
+          });
+        }
+      } catch (appsErr) {
+        console.warn('Mobile apps backend packages map notice:', appsErr);
+      }
+
       if (resData && resData.status === 'success' && Array.isArray(resData.data)) {
         const rawData = resData.data;
         const totalData = Number(resData.total_data ?? rawData.length);
@@ -382,6 +444,52 @@ export const cargoService = {
           const infoPaket = detail.info_paket || {};
           const resiStr = item.no_resi || item.cons_no || 'RESI-UNKNOWN';
 
+          const cleanResiUpper = String(resiStr).trim().toUpperCase();
+          const appsPkg = appsPackagesMap[cleanResiUpper];
+
+          const isScannedViaApps = !!(
+            appsPkg &&
+            (appsPkg.courierId || appsPkg.pickupPhotoUrl || appsPkg.scanLat || appsPkg.status === 'Dalam Transit' || appsPkg.status === 'Terkirim' || appsPkg.status === 'Berkendala')
+          );
+
+          let courierName = '-';
+          let pickupTime = '-';
+          let pickupMethod = '-';
+
+          if (isScannedViaApps) {
+            courierName = appsPkg.courier?.fullName || appsPkg.courierName || appsPkg.courierId || 'Kurir Apps';
+            const rawTime = appsPkg.updatedAt || appsPkg.createdAt;
+            pickupTime = rawTime
+              ? new Date(rawTime).toLocaleDateString('id-ID', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })
+              : 'Waktu Scan Apps';
+            pickupMethod = 'Android App';
+          } else if (item.status_terakhir && (item.status_terakhir.toLowerCase().includes('pickup') || item.status_terakhir.toLowerCase().includes('pick up'))) {
+            pickupMethod = 'Manual Dashboard';
+            courierName = 'Pickup Manual';
+            pickupTime = item.tgl_kirim || '-';
+          }
+
+          let itemLat: number | undefined = appsPkg?.shareLat || appsPkg?.scanLat || appsPkg?.latitude || appsPkg?.dashboardLat;
+          let itemLng: number | undefined = appsPkg?.shareLng || appsPkg?.scanLng || appsPkg?.longitude || appsPkg?.dashboardLng;
+
+          if ((itemLat === undefined || itemLng === undefined) && Array.isArray(item.timeline)) {
+            const validLoc = item.timeline.find((t: any) => t && t.lat && t.lon);
+            if (validLoc) {
+              const pLat = parseFloat(validLoc.lat);
+              const pLng = parseFloat(validLoc.lon);
+              if (!isNaN(pLat) && !isNaN(pLng) && (pLat !== 0 || pLng !== 0)) {
+                itemLat = pLat;
+                itemLng = pLng;
+              }
+            }
+          }
+
           const barcode =
             item.barcode_url ||
             (resiStr !== 'RESI-UNKNOWN'
@@ -397,7 +505,7 @@ export const cargoService = {
           return {
             resi: resiStr,
             barcodeUrl: barcode,
-            statusTerakhir: item.status_terakhir || 'Menunggu Pickup',
+            statusTerakhir: appsPkg?.status || item.status_terakhir || 'Menunggu Pickup',
             proyek: projName,
             tglKirim: item.tgl_kirim || '-',
             tujuan: item.tujuan || penerimaObj.alamat || '-',
@@ -405,7 +513,7 @@ export const cargoService = {
             tarif: item.tarif_kontrak || '-',
             penerima: item.penerima || penerimaObj.nama || '-',
             waktuTerima: item.waktu_diterima || '-',
-            photoUrl: item.foto || MOCK_PHOTOS.podHandoff1,
+            photoUrl: appsPkg?.pickupPhotoUrl || item.foto || MOCK_PHOTOS.podHandoff1,
             pengirim: pengirimObj.nama || 'PUSAT PEMBINAAN BAHASA DAN SASTRA',
             teleponPengirim: pengirimObj.telepon || '-',
             alamatPengirim: pengirimObj.alamat || '-',
@@ -416,6 +524,13 @@ export const cargoService = {
             tanggalInput: infoPaket.tanggal_input || item.tgl_kirim || '-',
             tanggalAngkut: infoPaket.tanggal_angkut || '-',
             keterangan: infoPaket.keterangan || '-',
+            isScannedViaApps,
+            courierName,
+            pickupTime,
+            pickupMethod,
+            latitude: itemLat,
+            longitude: itemLng,
+            pickupPhotoUrl: appsPkg?.pickupPhotoUrl || item.foto,
             statusTimeline: Array.isArray(item.timeline)
               ? item.timeline.map((t: any) => ({
                   waktu: t.waktu || '-',

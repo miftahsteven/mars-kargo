@@ -2,6 +2,7 @@ import React from 'react';
 import { X, Barcode, Copy, Check } from 'lucide-react';
 import { ShipmentItem } from '../../types/cargo';
 import { useAuth } from '../../context/AuthContext';
+import { PackageDetailMap } from './PackageDetailMap';
 
 interface ShipmentDetailModalProps {
   shipment: ShipmentItem | null;
@@ -170,12 +171,60 @@ export const ShipmentDetailModal: React.FC<ShipmentDetailModalProps> = ({
 
         <div className="h-0.5 bg-[#201e1d]/20 my-1" />
 
+        {/* Section: Informasi Kurir Pickup & Penanda App */}
+        <div className="bg-[#0F172A] text-white p-4 rounded-lg flex flex-col gap-2.5 shadow-md border border-slate-800">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Informasi Pickup & Kurir
+            </span>
+            {shipment.isScannedViaApps ? (
+              <span className="bg-emerald-500/20 text-emerald-300 text-xs font-extrabold px-3 py-1 rounded-full border border-emerald-500/40 flex items-center gap-1.5 shadow-xs">
+                <span>📱 Scan Android App</span>
+              </span>
+            ) : shipment.pickupMethod === 'Manual Dashboard' ? (
+              <span className="bg-amber-500/20 text-amber-300 text-xs font-bold px-3 py-1 rounded-full border border-amber-500/40">
+                📋 Pickup Manual (Dashboard)
+              </span>
+            ) : (
+              <span className="bg-slate-800 text-slate-300 text-xs font-medium px-2.5 py-0.5 rounded">
+                Menunggu Pickup
+              </span>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div>
+              <span className="text-slate-400 block text-[11px]">Kurir Penanggung Jawab:</span>
+              <span className="font-bold text-sm text-white">{shipment.courierName || 'Kurir Mars Kargo'}</span>
+            </div>
+            <div>
+              <span className="text-slate-400 block text-[11px]">Tanggal & Jam Pickup:</span>
+              <span className="font-semibold text-slate-200">{shipment.pickupTime || shipment.tglKirim}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Section: Lokasi Barang di Peta (MapTiler Interactive Maps) */}
+        <div>
+          <div className="card-kicker mb-2">Lokasi Barang di Peta (GPS Realtime MapTiler)</div>
+          <PackageDetailMap
+            latitude={shipment.latitude}
+            longitude={shipment.longitude}
+            resi={shipment.resi}
+            tujuan={shipment.tujuan}
+            isScannedViaApps={shipment.isScannedViaApps}
+            courierName={shipment.courierName}
+          />
+        </div>
+
+        <div className="h-0.5 bg-[#201e1d]/20 my-1" />
+
         {/* Photo Proof */}
         <div>
-          <div className="card-kicker mb-2">Foto Bukti Penerimaan</div>
+          <div className="card-kicker mb-2">Foto Bukti Pickup / Penerimaan</div>
           <div
-            className="w-full max-w-xs aspect-[4/3] bg-cover bg-center border border-[#201e1d]/20"
-            style={{ backgroundImage: `url(${shipment.photoUrl})` }}
+            className="w-full max-w-xs aspect-[4/3] bg-cover bg-center border border-[#201e1d]/20 rounded"
+            style={{ backgroundImage: `url(${shipment.pickupPhotoUrl || shipment.photoUrl})` }}
           />
         </div>
 

@@ -9,6 +9,12 @@ import {
   ChevronsRight,
   Barcode,
   RotateCw,
+  Smartphone,
+  ClipboardList,
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
+  Truck,
 } from 'lucide-react';
 
 interface ShipmentTableProps {
@@ -37,29 +43,72 @@ export const ShipmentTable: React.FC<ShipmentTableProps> = ({
 
   // Local state for search & client pagination fallback
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('Semua');
   const [currentPage, setCurrentPage] = useState(1);
   const [jumpPageInput, setJumpPageInput] = useState('');
 
-  // Filter shipments based on search query
+  // Filter options
+  const statusFilterOptions = [
+    { label: 'Semua Status', value: 'Semua' },
+    { label: 'Belum Ada Status', value: 'Belum Ada Status' },
+    { label: 'Pick Up', value: 'Pick Up' },
+    { label: 'Pickup by Apps 📱', value: 'Pickup by Apps' },
+    { label: 'Pick Up (Manual)', value: 'Pick Up (Manual)' },
+    { label: 'Dalam Transit', value: 'Dalam Transit' },
+    { label: 'Terkirim / Selesai', value: 'Terkirim' },
+    { label: 'Berkendala', value: 'Berkendala' },
+  ];
+
+  // Filter shipments based on search query & status filter
   const filteredShipments = useMemo(() => {
-    if (!searchTerm.trim()) return shipments;
-    const term = searchTerm.toLowerCase().trim();
-    return shipments.filter(
-      (s) =>
-        s.resi.toLowerCase().includes(term) ||
-        s.penerima.toLowerCase().includes(term) ||
-        s.tujuan.toLowerCase().includes(term) ||
-        s.proyek.toLowerCase().includes(term) ||
-        (s.statusTerakhir && s.statusTerakhir.toLowerCase().includes(term))
-    );
-  }, [shipments, searchTerm]);
+    let result = shipments;
+
+    if (statusFilter !== 'Semua') {
+      if (statusFilter === 'Belum Ada Status') {
+        result = result.filter(
+          (s) =>
+            !s.statusTerakhir ||
+            s.statusTerakhir.toLowerCase().includes('menunggu') ||
+            s.statusTerakhir.toLowerCase().includes('belum')
+        );
+      } else if (statusFilter === 'Pickup by Apps') {
+        result = result.filter((s) => s.isScannedViaApps === true);
+      } else if (statusFilter === 'Pick Up (Manual)') {
+        result = result.filter(
+          (s) =>
+            (s.statusTerakhir?.toLowerCase().includes('pickup') || s.statusTerakhir?.toLowerCase().includes('pick up')) &&
+            !s.isScannedViaApps
+        );
+      } else if (statusFilter === 'Pick Up') {
+        result = result.filter(
+          (s) => s.statusTerakhir?.toLowerCase().includes('pickup') || s.statusTerakhir?.toLowerCase().includes('pick up')
+        );
+      } else {
+        result = result.filter((s) => s.statusTerakhir?.toLowerCase().includes(statusFilter.toLowerCase()));
+      }
+    }
+
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase().trim();
+      result = result.filter(
+        (s) =>
+          s.resi.toLowerCase().includes(term) ||
+          s.penerima.toLowerCase().includes(term) ||
+          s.tujuan.toLowerCase().includes(term) ||
+          s.proyek.toLowerCase().includes(term) ||
+          (s.courierName && s.courierName.toLowerCase().includes(term)) ||
+          (s.statusTerakhir && s.statusTerakhir.toLowerCase().includes(term))
+      );
+    }
+    return result;
+  }, [shipments, statusFilter, searchTerm]);
 
   // Calculate pagination parameters
   const pageSize = limit || 10;
   const totalRecords = totalItems ?? filteredShipments.length;
   const totalPages = Math.max(1, Math.ceil(totalRecords / pageSize));
 
-  // Auto-clamp currentPage if out of bounds (e.g. after filtering)
+  // Auto-clamp currentPage if out of bounds
   React.useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(1);
@@ -113,24 +162,40 @@ export const ShipmentTable: React.FC<ShipmentTableProps> = ({
   };
 
   // Status Badge Helper
-  const renderStatusBadge = (status?: string) => {
+  const renderStatusBadge = (status?: string, isScannedViaApps?: boolean) => {
     const st = status || 'Menunggu Pickup';
-    let bg = 'bg-[#201e1d]/10 text-[#605d5d] border-[#201e1d]/20';
+    const lower = st.toLowerCase();
 
-    if (st.toLowerCase().includes('selesai') || st.toLowerCase().includes('completed') || st.toLowerCase().includes('terima')) {
-      bg = 'bg-emerald-50 text-emerald-800 border-emerald-300 font-semibold';
-    } else if (st.toLowerCase().includes('transit')) {
-      bg = 'bg-amber-50 text-amber-800 border-amber-300 font-semibold';
-    } else if (st.toLowerCase().includes('pickup') || st.toLowerCase().includes('jemput')) {
-      bg = 'bg-blue-50 text-blue-800 border-blue-300 font-semibold';
-    } else if (st.toLowerCase().includes('kendala') || st.toLowerCase().includes('berkendala')) {
-      bg = 'bg-red-50 text-red-800 border-red-300 font-bold';
+    let bg = 'bg-slate-100 text-slate-700 border-slate-300 font-medium';
+    let icon = <Clock className="w-3.5 h-3.5 text-slate-500 shrink-0" />;
+
+    if (lower.includes('selesai') || lower.includes('completed') || lower.includes('terima')) {
+      bg = 'bg-emerald-50 text-emerald-900 border-emerald-300 font-bold';
+      icon = <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />;
+    } else if (lower.includes('transit')) {
+      bg = 'bg-amber-50 text-amber-900 border-amber-300 font-bold';
+      icon = <Truck className="w-3.5 h-3.5 text-amber-600 shrink-0" />;
+    } else if (lower.includes('pickup') || lower.includes('jemput')) {
+      bg = 'bg-blue-50 text-blue-900 border-blue-300 font-bold';
+      icon = <Clock className="w-3.5 h-3.5 text-blue-600 shrink-0" />;
+    } else if (lower.includes('kendala') || lower.includes('berkendala')) {
+      bg = 'bg-red-50 text-red-900 border-red-300 font-extrabold';
+      icon = <AlertTriangle className="w-3.5 h-3.5 text-red-600 shrink-0" />;
     }
 
     return (
-      <span className={`inline-block px-2 py-0.5 text-[11px] rounded border ${bg}`}>
-        {st}
-      </span>
+      <div className="flex flex-col items-start gap-1">
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md border shadow-2xs whitespace-nowrap ${bg}`}>
+          {icon}
+          <span>{st}</span>
+        </span>
+        {isScannedViaApps && (
+          <span className="inline-flex items-center gap-1 text-[10.5px] bg-emerald-600 text-white font-extrabold px-2 py-0.5 rounded-full shadow-2xs whitespace-nowrap">
+            <Smartphone className="w-3 h-3 text-white shrink-0" />
+            <span>Scan App Android</span>
+          </span>
+        )}
+      </div>
     );
   };
 
@@ -154,7 +219,7 @@ export const ShipmentTable: React.FC<ShipmentTableProps> = ({
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#605d5d]" />
             <input
               type="text"
-              placeholder="Cari Resi, Penerima, Tujuan..."
+              placeholder="Cari Resi, Kurir, Penerima, Tujuan..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -198,51 +263,80 @@ export const ShipmentTable: React.FC<ShipmentTableProps> = ({
         </div>
       </div>
 
+      {/* Filter Status Pills Bar */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 pt-1 text-xs">
+        <span className="text-xs font-bold text-[#605d5d] shrink-0 mr-1">Filter Status:</span>
+        {statusFilterOptions.map((opt) => {
+          const isActive = statusFilter === opt.value;
+          return (
+            <button
+              key={opt.value}
+              onClick={() => {
+                setStatusFilter(opt.value);
+                setCurrentPage(1);
+              }}
+              className={`px-3 py-1.5 rounded-full font-bold text-xs whitespace-nowrap transition-all border ${
+                isActive
+                  ? 'bg-[#7c1405] text-white border-[#7c1405] shadow-xs scale-102'
+                  : 'bg-white text-[#201e1d]/80 border-[#201e1d]/20 hover:bg-[#7c1405]/10 hover:border-[#7c1405]/30'
+              }`}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Shipment Data Table */}
       <div className="overflow-x-auto min-h-[320px]">
         <table className="table w-full text-xs">
           <thead>
             <tr className="bg-[#f0eeee] text-left text-[#605d5d]">
-              <th className="py-2.5 px-3">Foto / Bukti</th>
-              <th className="py-2.5 px-3">No. Resi</th>
-              <th className="py-2.5 px-3">Status</th>
-              <th className="py-2.5 px-3">Tgl Kirim</th>
-              <th className="py-2.5 px-3">Tujuan</th>
-              <th className="py-2.5 px-3">Berat / Vol</th>
-              <th className="py-2.5 px-3">Tarif Kontrak</th>
-              <th className="py-2.5 px-3">Penerima</th>
-              <th className="py-2.5 px-3">Waktu Diterima</th>
+              <th className="py-3 px-3.5">Foto / Bukti</th>
+              <th className="py-3 px-3.5 whitespace-nowrap">No. Resi</th>
+              <th className="py-3 px-3.5 whitespace-nowrap">Status</th>
+              <th className="py-3 px-3.5 whitespace-nowrap min-w-[170px]">Kurir Pickup & Waktu</th>
+              <th className="py-3 px-3.5 whitespace-nowrap">Tgl Kirim</th>
+              <th className="py-3 px-3.5">Tujuan</th>
+              <th className="py-3 px-3.5 whitespace-nowrap">Berat / Vol</th>
+              <th className="py-3 px-3.5 whitespace-nowrap">Tarif Kontrak</th>
+              <th className="py-3 px-3.5">Penerima</th>
+              <th className="py-3 px-3.5 whitespace-nowrap">Waktu Diterima</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, idx) => (
                 <tr key={idx} className="animate-pulse border-b border-[#201e1d]/10">
-                  <td className="py-3 px-3">
-                    <div className="w-8 h-8 bg-gray-200 rounded" />
+                  <td className="py-3 px-3.5">
+                    <div className="w-9 h-9 bg-gray-200 rounded" />
                   </td>
-                  <td className="py-3 px-3"><div className="w-24 h-4 bg-gray-200 rounded" /></td>
-                  <td className="py-3 px-3"><div className="w-20 h-4 bg-gray-200 rounded" /></td>
-                  <td className="py-3 px-3"><div className="w-16 h-4 bg-gray-200 rounded" /></td>
-                  <td className="py-3 px-3"><div className="w-32 h-4 bg-gray-200 rounded" /></td>
-                  <td className="py-3 px-3"><div className="w-12 h-4 bg-gray-200 rounded" /></td>
-                  <td className="py-3 px-3"><div className="w-16 h-4 bg-gray-200 rounded" /></td>
-                  <td className="py-3 px-3"><div className="w-28 h-4 bg-gray-200 rounded" /></td>
-                  <td className="py-3 px-3"><div className="w-20 h-4 bg-gray-200 rounded" /></td>
+                  <td className="py-3 px-3.5"><div className="w-24 h-4 bg-gray-200 rounded" /></td>
+                  <td className="py-3 px-3.5"><div className="w-24 h-4 bg-gray-200 rounded" /></td>
+                  <td className="py-3 px-3.5"><div className="w-32 h-4 bg-gray-200 rounded" /></td>
+                  <td className="py-3 px-3.5"><div className="w-16 h-4 bg-gray-200 rounded" /></td>
+                  <td className="py-3 px-3.5"><div className="w-32 h-4 bg-gray-200 rounded" /></td>
+                  <td className="py-3 px-3.5"><div className="w-12 h-4 bg-gray-200 rounded" /></td>
+                  <td className="py-3 px-3.5"><div className="w-16 h-4 bg-gray-200 rounded" /></td>
+                  <td className="py-3 px-3.5"><div className="w-28 h-4 bg-gray-200 rounded" /></td>
+                  <td className="py-3 px-3.5"><div className="w-20 h-4 bg-gray-200 rounded" /></td>
                 </tr>
               ))
             ) : currentSlice.length === 0 ? (
               <tr>
-                <td colSpan={9} className="text-center py-12 text-[#605d5d]">
+                <td colSpan={10} className="text-center py-12 text-[#605d5d]">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Barcode className="w-8 h-8 text-gray-300" />
                     <span className="font-semibold">Tidak ada data pengiriman yang ditemukan.</span>
-                    {searchTerm && (
+                    {(searchTerm || statusFilter !== 'Semua') && (
                       <button
-                        onClick={() => setSearchTerm('')}
+                        onClick={() => {
+                          setSearchTerm('');
+                          setStatusFilter('Semua');
+                        }}
                         className="text-xs text-[#7c1405] underline font-bold mt-1"
                       >
-                        Bersihkan Pencarian
+                        Bersihkan Filter & Pencarian
                       </button>
                     )}
                   </div>
@@ -255,31 +349,54 @@ export const ShipmentTable: React.FC<ShipmentTableProps> = ({
                   className="border-b border-[#201e1d]/10 cursor-pointer hover:bg-[#7c1405]/5 transition-colors group"
                   onClick={() => onSelectShipment(row.resi)}
                 >
-                  <td className="py-2.5 px-3">
+                  <td className="py-3 px-3.5">
                     <div
                       className="w-9 h-9 rounded bg-cover bg-center border border-black/10 shadow-xs"
                       style={{ backgroundImage: `url(${row.photoUrl})` }}
                     />
                   </td>
-                  <td className="py-2.5 px-3 font-bold font-heading text-[#7c1405] group-hover:underline">
+                  <td className="py-3 px-3.5 font-bold font-heading text-[#7c1405] group-hover:underline whitespace-nowrap">
                     <div className="flex items-center gap-1">
                       <Barcode className="w-3.5 h-3.5 text-[#ec3013] shrink-0" />
                       <span>{row.resi}</span>
                     </div>
                   </td>
-                  <td className="py-2.5 px-3">{renderStatusBadge(row.statusTerakhir)}</td>
-                  <td className="py-2.5 px-3 whitespace-nowrap">{row.tglKirim}</td>
-                  <td className="py-2.5 px-3 max-w-[200px] truncate" title={row.tujuan}>
+                  <td className="py-3 px-3.5 whitespace-nowrap">{renderStatusBadge(row.statusTerakhir, row.isScannedViaApps)}</td>
+                  <td className="py-3 px-3.5 whitespace-nowrap min-w-[170px]">
+                    {row.isScannedViaApps ? (
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-bold text-[#201e1d] text-xs flex items-center gap-1">
+                          <span>{row.courierName || 'Kurir Apps'}</span>
+                        </span>
+                        <span className="text-[11px] text-emerald-700 font-bold flex items-center gap-1">
+                          <Smartphone className="w-3 h-3 text-emerald-600 shrink-0" />
+                          <span>{row.pickupTime || row.tglKirim}</span>
+                        </span>
+                      </div>
+                    ) : row.pickupMethod === 'Manual Dashboard' ? (
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-semibold text-amber-900 text-xs">Pickup Manual</span>
+                        <span className="text-[11px] text-amber-700 font-medium flex items-center gap-1">
+                          <ClipboardList className="w-3 h-3 text-amber-600 shrink-0" />
+                          <span>Dashboard Lama</span>
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 font-medium">-</span>
+                    )}
+                  </td>
+                  <td className="py-3 px-3.5 whitespace-nowrap">{row.tglKirim}</td>
+                  <td className="py-3 px-3.5 max-w-[220px] truncate" title={row.tujuan}>
                     {row.tujuan}
                   </td>
-                  <td className="py-2.5 px-3 whitespace-nowrap">{row.berat}</td>
-                  <td className="py-2.5 px-3 font-semibold whitespace-nowrap">
+                  <td className="py-3 px-3.5 whitespace-nowrap">{row.berat}</td>
+                  <td className="py-3 px-3.5 font-semibold whitespace-nowrap">
                     {isGovernment ? '-' : row.tarif}
                   </td>
-                  <td className="py-2.5 px-3 font-medium max-w-[180px] truncate" title={row.penerima}>
+                  <td className="py-3 px-3.5 font-medium max-w-[200px] truncate" title={row.penerima}>
                     {row.penerima}
                   </td>
-                  <td className="py-2.5 px-3 whitespace-nowrap text-[#605d5d]">{row.waktuTerima}</td>
+                  <td className="py-3 px-3.5 whitespace-nowrap text-[#605d5d]">{row.waktuTerima}</td>
                 </tr>
               ))
             )}
