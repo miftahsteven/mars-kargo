@@ -107,6 +107,8 @@ export interface GetShipmentsParams {
   order?: string;
   cons_no?: string;
   page?: number;
+  start_date?: string;
+  end_date?: string;
 }
 
 

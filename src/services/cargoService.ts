@@ -382,14 +382,18 @@ export const cargoService = {
     const rawUserData = authService.getRawUserData();
     const loggedInOfficeId = currentUser?.cabang_id || rawUserData?.cabang_id || 866;
 
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+
     const queryParams: Record<string, any> = {
       action: 'get-riwayat-pengiriman-all',
+      start_date: params?.start_date ?? '2026-07-17',
+      end_date: params?.end_date ?? todayStr,
+      office_id: params?.office_id ?? params?.officer_id ?? loggedInOfficeId,
     };
 
     if (params?.cons_no) {
       queryParams.cons_no = params.cons_no;
-    } else {
-      queryParams.office_id = params?.office_id ?? params?.officer_id ?? loggedInOfficeId;
     }
 
     if (params?.limit !== undefined) {
@@ -514,7 +518,7 @@ export const cargoService = {
             barcodeUrl: barcode,
             statusTerakhir: appsPkg?.status || item.status_terakhir || 'Menunggu Pickup',
             proyek: projName,
-            tglKirim: item.tgl_kirim || '-',
+            tglKirim: infoPaket.tanggal_angkut || item.tgl_kirim || '-',
             tujuan: item.tujuan || penerimaObj.alamat || '-',
             berat: item.berat_vol || '0 kg',
             tarif: item.tarif_kontrak || '-',
@@ -528,7 +532,7 @@ export const cargoService = {
             alamatPenerima: penerimaObj.alamat || item.tujuan || '-',
             jenisBarang: infoPaket.jenis_barang || 'BUKU',
             tipeBooking: infoPaket.tipe_booking || 'Tidak Langsung',
-            tanggalInput: infoPaket.tanggal_input || item.tgl_kirim || '-',
+            tanggalInput: infoPaket.tanggal_angkut || item.tgl_kirim || '-',
             tanggalAngkut: infoPaket.tanggal_angkut || '-',
             keterangan: infoPaket.keterangan || '-',
             isScannedViaApps,
@@ -548,7 +552,36 @@ export const cargoService = {
           };
         });
 
-        return { shipments: mapped, totalData };
+        const parseTanggalAngkut = (dateStr?: string): Date | null => {
+          if (!dateStr || dateStr === '-') return null;
+          const parts = dateStr.trim().split(' ');
+          if (parts.length < 3) return null;
+          const day = parseInt(parts[0], 10);
+          const monthStr = parts[1].toLowerCase();
+          const year = parseInt(parts[2], 10);
+
+          const months: Record<string, number> = {
+            jan: 0, feb: 1, mar: 2, apr: 3, mei: 4, jun: 5, jul: 6, ags: 7, sep: 8, okt: 9, nov: 10, des: 11,
+            january: 0, february: 1, march: 2, april: 3, may: 4, june: 5, july: 6, august: 7, september: 8, october: 9, november: 10, december: 11
+          };
+
+          const month = months[monthStr] !== undefined ? months[monthStr] : 0;
+          return new Date(year, month, day);
+        };
+
+        const startLimit = new Date(params?.start_date ?? '2026-07-17');
+        startLimit.setHours(0, 0, 0, 0);
+
+        const endLimit = new Date(params?.end_date ?? todayStr);
+        endLimit.setHours(23, 59, 59, 999);
+
+        const filteredMapped = mapped.filter((item: any) => {
+          const tglAngkut = parseTanggalAngkut(item.tanggalAngkut);
+          if (!tglAngkut) return false;
+          return tglAngkut >= startLimit && tglAngkut <= endLimit;
+        });
+
+        return { shipments: filteredMapped, totalData: filteredMapped.length };
       }
     } catch (err) {
       console.warn('Failed to fetch get-riwayat-pengiriman-all from API:', err);
