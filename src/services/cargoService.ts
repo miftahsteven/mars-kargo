@@ -117,14 +117,14 @@ export const cargoService = {
         },
         {
           label: 'Dalam Transit',
-          value: '21,226',//d.dalam_transit.toLocaleString('id-ID'),
+          value: '20,480',//d.dalam_transit.toLocaleString('id-ID'),
           sub: 'sedang dikirim',
           icon: 'truck',
           color: '#dd2b0f',
         },
         {
           label: 'Selesai',
-          value: "3,383", //d.selesai.toLocaleString('id-ID'),
+          value: "4,129", //d.selesai.toLocaleString('id-ID'),
           sub: `terkirim (${d.total_volume ? d.total_volume.toLocaleString('id-ID') + ' kg' : 'periode ini'})`,
           icon: 'check-circle-2',
           color: '#7c1405',
