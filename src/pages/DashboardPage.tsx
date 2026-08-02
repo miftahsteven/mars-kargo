@@ -59,7 +59,7 @@ export const DashboardPage: React.FC = () => {
     };
 
     fetchData();
-    fetchShipmentData(1000);
+    fetchShipmentData(500);
   }, []);
 
   // When a resi is selected, fetch single detail using cons_no parameter or use cached item
