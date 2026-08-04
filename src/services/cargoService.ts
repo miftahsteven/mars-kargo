@@ -117,7 +117,7 @@ export const cargoService = {
         },
         {
           label: 'Dalam Transit',
-          value: '20,480',//d.dalam_transit.toLocaleString('id-ID'),
+          value: '19,382',//d.dalam_transit.toLocaleString('id-ID'),
           sub: 'sedang dikirim',
           icon: 'truck',
           color: '#dd2b0f',

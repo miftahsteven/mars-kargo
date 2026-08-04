@@ -50,7 +50,7 @@ export const StatusSlaCards: React.FC<StatusSlaCardsProps> = ({ summaryData: pro
     },
     {
       label: 'Dalam Transit',
-      count: 20480, //activeData.dalam_transit,
+      count: 19382, //activeData.dalam_transit,
       pct: activeData.persentase_dalam_transit,
       color: '#ff9783',
     },
