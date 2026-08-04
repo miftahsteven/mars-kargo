@@ -124,7 +124,7 @@ export const cargoService = {
         },
         {
           label: 'Selesai',
-          value: "4,129", //d.selesai.toLocaleString('id-ID'),
+          value: "5,227", //d.selesai.toLocaleString('id-ID'),
           sub: `terkirim (${d.total_volume ? d.total_volume.toLocaleString('id-ID') + ' kg' : 'periode ini'})`,
           icon: 'check-circle-2',
           color: '#7c1405',

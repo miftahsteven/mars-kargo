@@ -128,7 +128,7 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* KPI Stat Cards */}
-      <StatCards />
+      <StatCards /> {/* manual proses */}
 
       {/* Geographic Drill Down & Status / SLA Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
@@ -136,7 +136,7 @@ export const DashboardPage: React.FC = () => {
           <GeoDrillDown islands={islands} />
         </div>
         <div className="lg:col-span-1 min-w-0">
-          <StatusSlaCards />
+          <StatusSlaCards /> {/* manual proses */}
         </div>
       </div>
 
