@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { cargoService, SummaryMetricsRaw } from '../../services/cargoService';
+import axios from 'axios';
+import { authService } from '../../services/authService';
 
 interface StatusSlaCardsProps {
   summaryData?: SummaryMetricsRaw | null;
@@ -10,6 +12,11 @@ export const StatusSlaCards: React.FC<StatusSlaCardsProps> = ({ summaryData: pro
   const [data, setData] = useState<SummaryMetricsRaw | null>(propsSummaryData || null);
   const [hoveredStatus, setHoveredStatus] = useState<string | null>(null);
   const [hoveredSla, setHoveredSla] = useState<string | null>(null);
+
+  const [kurirCompletion, setKurirCompletion] = useState<{
+    total_on_delivery: number;
+    total_completed: number;
+  } | null>(null);
 
   useEffect(() => {
     if (propsSummaryData) {
@@ -27,6 +34,50 @@ export const StatusSlaCards: React.FC<StatusSlaCardsProps> = ({ summaryData: pro
     fetchSummary();
   }, [propsSummaryData, officerId]);
 
+  useEffect(() => {
+    const fetchKurirCompletion = async () => {
+      const currentUser = authService.getCurrentUser();
+      const rawUserData = authService.getRawUserData();
+      const loggedInUserId = currentUser?.user_id || rawUserData?.user_id || 886;
+      const resolvedOfficerId = officerId ?? loggedInUserId;
+
+      try {
+        const response = await axios.get('https://cargo.marscargo.net/api.php', {
+          params: {
+            action: 'get-kurir-completion',
+            officer_id: resolvedOfficerId,
+          },
+          headers: {
+            Authorization: 'KODE_RAHASIA_DASHBOARD_123',
+          },
+        });
+
+        let resData = response.data;
+        if (typeof resData === 'string') {
+          const jsonStartIndex = resData.indexOf('{');
+          if (jsonStartIndex !== -1) {
+            try {
+              resData = JSON.parse(resData.substring(jsonStartIndex));
+            } catch (e) {
+              console.warn('Failed to parse sanitized response:', e);
+            }
+          }
+        }
+
+        if (resData && resData.status === 'success' && resData.data_akumulasi) {
+          setKurirCompletion({
+            total_on_delivery: Number(resData.data_akumulasi.total_on_delivery ?? 0),
+            total_completed: Number(resData.data_akumulasi.total_completed ?? 0),
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to fetch kurir completion data:', err);
+      }
+    };
+
+    fetchKurirCompletion();
+  }, [officerId]);
+
   const fallbackData: SummaryMetricsRaw = {
     menunggu_pickup: 24608,
     persentase_menunggu_pickup: 98.83,
@@ -41,37 +92,41 @@ export const StatusSlaCards: React.FC<StatusSlaCardsProps> = ({ summaryData: pro
 
   const activeData = data || fallbackData;
 
+  const transitCount = kurirCompletion !== null ? kurirCompletion.total_on_delivery : 19382;
+  const selesaiCount = kurirCompletion !== null ? kurirCompletion.total_completed : 4129;
+
   const statusCounts = [
     {
       label: 'Menunggu Pickup',
       count: activeData.menunggu_pickup,
-      pct: activeData.persentase_menunggu_pickup,
       color: '#bab6b6',
     },
     {
       label: 'Dalam Transit',
-      count: 19382, //activeData.dalam_transit,
-      pct: activeData.persentase_dalam_transit,
+      count: transitCount,
       color: '#ff9783',
     },
     {
       label: 'Selesai / Delivered',
-      count: 4129, //activeData.selesai,
-      pct: activeData.persentase_selesai,
+      count: selesaiCount,
       color: '#ec3013',
     },
     {
       label: 'Berkendala',
       count: activeData.berkendala,
-      pct: activeData.persentase_berkendala,
       color: '#7c1405',
     },
   ];
 
-  const totalCount = activeData.total_volume || statusCounts.reduce((acc, c) => acc + c.count, 0);
+  const totalCount = statusCounts.reduce((acc, c) => acc + c.count, 0);
+
+  const statusCountsWithPct = statusCounts.map((item) => ({
+    ...item,
+    pct: totalCount > 0 ? (item.count / totalCount) * 100 : 0,
+  }));
 
   // Compute SLA percentage based on completed shipments vs total finished
-  const finishedCount = activeData.selesai || 290;
+  const finishedCount = selesaiCount;
   const onTimePct = finishedCount > 0 ? 99.3 : 100;
   const latePct = (100 - onTimePct).toFixed(1);
 
@@ -83,11 +138,10 @@ export const StatusSlaCards: React.FC<StatusSlaCardsProps> = ({ summaryData: pro
 
         {/* Stacked Progress Bar */}
         <div className="flex h-5 overflow-hidden rounded-[2px] bg-[#eae7e7]">
-          {statusCounts.map((seg, idx) => {
-            const rawPct = seg.pct ?? (totalCount > 0 ? (seg.count / totalCount) * 100 : 0);
-            const displayPct = Number(rawPct).toFixed(2);
+          {statusCountsWithPct.map((seg, idx) => {
+            const displayPct = seg.pct.toFixed(2);
             // Ensure tiny non-zero values (like 0.01%) are visible in the bar
-            const widthPct = seg.count > 0 ? Math.max(rawPct, 1.2) : 0;
+            const widthPct = seg.count > 0 ? Math.max(seg.pct, 1.2) : 0;
 
             if (widthPct <= 0) return null;
 
@@ -111,9 +165,8 @@ export const StatusSlaCards: React.FC<StatusSlaCardsProps> = ({ summaryData: pro
 
         {/* Legend / Breakdown List */}
         <div className="flex flex-col gap-1.5 mt-1">
-          {statusCounts.map((seg, idx) => {
-            const rawPct = seg.pct ?? (totalCount > 0 ? (seg.count / totalCount) * 100 : 0);
-            const displayPct = Number(rawPct).toFixed(1);
+          {statusCountsWithPct.map((seg, idx) => {
+            const displayPct = seg.pct.toFixed(1);
             return (
               <div key={idx} className="flex items-center gap-2 text-xs">
                 <div className="w-2.5 h-2.5 flex-none" style={{ backgroundColor: seg.color }} />
