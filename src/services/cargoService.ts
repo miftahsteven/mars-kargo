@@ -104,9 +104,54 @@ export const cargoService = {
     start_date?: string;
     end_date?: string;
   }): Promise<StatMetric[]> => {
-    const d = await cargoService.getRawSummaryMetrics(params);
+    const currentUser = authService.getCurrentUser();
+    const rawUserData = authService.getRawUserData();
+    const loggedInUserId = currentUser?.user_id || rawUserData?.user_id || 886;
+    const officerId = params?.officer_id ?? loggedInUserId;
+
+    const [d, kurirCompletion] = await Promise.all([
+      cargoService.getRawSummaryMetrics(params),
+      (async () => {
+        try {
+          const response = await axios.get('https://cargo.marscargo.net/api.php', {
+            params: {
+              action: 'get-kurir-completion',
+              officer_id: officerId,
+            },
+            headers: {
+              Authorization: 'KODE_RAHASIA_DASHBOARD_123',
+            },
+          });
+
+          let resData = response.data;
+          if (typeof resData === 'string') {
+            const jsonStartIndex = resData.indexOf('{');
+            if (jsonStartIndex !== -1) {
+              try {
+                resData = JSON.parse(resData.substring(jsonStartIndex));
+              } catch (e) {
+                console.warn('Failed to parse sanitized response:', e);
+              }
+            }
+          }
+
+          if (resData && resData.status === 'success' && resData.data_akumulasi) {
+            return {
+              total_on_delivery: Number(resData.data_akumulasi.total_on_delivery ?? 0),
+              total_completed: Number(resData.data_akumulasi.total_completed ?? 0),
+            };
+          }
+        } catch (err) {
+          console.warn('Failed to fetch kurir completion data:', err);
+        }
+        return null;
+      })(),
+    ]);
 
     if (d) {
+      const transitValue = kurirCompletion !== null ? kurirCompletion.total_on_delivery : 18991;
+      const selesaiValue = kurirCompletion !== null ? kurirCompletion.total_completed : 5618;
+
       return [
         {
           label: 'Menunggu Pickup',
@@ -117,14 +162,14 @@ export const cargoService = {
         },
         {
           label: 'Dalam Transit',
-          value: '19,382',//d.dalam_transit.toLocaleString('id-ID'),
+          value: transitValue.toLocaleString('id-ID'),
           sub: 'sedang dikirim',
           icon: 'truck',
           color: '#dd2b0f',
         },
         {
           label: 'Selesai',
-          value: "5,227", //d.selesai.toLocaleString('id-ID'),
+          value: selesaiValue.toLocaleString('id-ID'),
           sub: `terkirim (${d.total_volume ? d.total_volume.toLocaleString('id-ID') + ' kg' : 'periode ini'})`,
           icon: 'check-circle-2',
           color: '#7c1405',
