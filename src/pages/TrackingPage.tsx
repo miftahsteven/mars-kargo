@@ -12,11 +12,28 @@ export const TrackingPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
+  const [apiTransit, setApiTransit] = useState<string>('0');
+  const [apiDelivered, setApiDelivered] = useState<string>('0');
+
   const fetchPetaSebaran = async () => {
     setLoading(true);
-    const data = await cargoService.getPetaSebaran();
-    setPins(data);
-    setLoading(false);
+    try {
+      const [data, kpis] = await Promise.all([
+        cargoService.getPetaSebaran(),
+        cargoService.getSummaryMetrics()
+      ]);
+      setPins(data);
+
+      const transitKpi = kpis.find(k => k.label === 'Dalam Transit');
+      const deliveredKpi = kpis.find(k => k.label === 'Selesai');
+      
+      if (transitKpi) setApiTransit(transitKpi.value);
+      if (deliveredKpi) setApiDelivered(deliveredKpi.value);
+    } catch (e) {
+      console.warn('Failed to fetch tracking data', e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -109,11 +126,10 @@ export const TrackingPage: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div
           onClick={() => setStatusFilter('ALL')}
-          className={`cursor-pointer p-3.5 rounded-xl border transition-all ${
-            statusFilter === 'ALL'
+          className={`cursor-pointer p-3.5 rounded-xl border transition-all ${statusFilter === 'ALL'
               ? 'bg-[#1c1a19] text-[#ffffff] border-[#1c1a19] shadow-md'
               : 'bg-[#ffffff] text-[#1c1a19] border-[#e8e7ec] hover:border-[#1c1a19]'
-          }`}
+            }`}
         >
           <div className="text-[10px] font-extrabold tracking-wider uppercase opacity-75">Total Titik Peta</div>
           <div className="text-2xl font-heading font-black mt-0.5">{counts.total.toLocaleString('id-ID')}</div>
@@ -121,35 +137,32 @@ export const TrackingPage: React.FC = () => {
 
         <div
           onClick={() => setStatusFilter('Dalam Transit')}
-          className={`cursor-pointer p-3.5 rounded-xl border transition-all ${
-            statusFilter === 'Dalam Transit'
+          className={`cursor-pointer p-3.5 rounded-xl border transition-all ${statusFilter === 'Dalam Transit'
               ? 'bg-[#e53935] text-[#ffffff] border-[#e53935] shadow-md'
               : 'bg-[#ffffff] text-[#1c1a19] border-[#e8e7ec] hover:border-[#e53935]'
-          }`}
+            }`}
         >
           <div className="text-[10px] font-extrabold tracking-wider uppercase opacity-75">Dalam Transit / On Delivery</div>
-          <div className="text-2xl font-heading font-black mt-0.5">{counts.transit.toLocaleString('id-ID')}</div>
+          <div className="text-2xl font-heading font-black mt-0.5">{apiTransit}</div>
         </div>
 
         <div
           onClick={() => setStatusFilter('Delivered')}
-          className={`cursor-pointer p-3.5 rounded-xl border transition-all ${
-            statusFilter === 'Delivered'
+          className={`cursor-pointer p-3.5 rounded-xl border transition-all ${statusFilter === 'Delivered'
               ? 'bg-[#1fa96a] text-[#ffffff] border-[#1fa96a] shadow-md'
               : 'bg-[#ffffff] text-[#1c1a19] border-[#e8e7ec] hover:border-[#1fa96a]'
-          }`}
+            }`}
         >
           <div className="text-[10px] font-extrabold tracking-wider uppercase opacity-75">Delivered / Selesai</div>
-          <div className="text-2xl font-heading font-black mt-0.5">{counts.delivered.toLocaleString('id-ID')}</div>
+          <div className="text-2xl font-heading font-black mt-0.5">{apiDelivered}</div>
         </div>
 
         <div
           onClick={() => setStatusFilter('Menunggu Pickup')}
-          className={`cursor-pointer p-3.5 rounded-xl border transition-all ${
-            statusFilter === 'Menunggu Pickup'
+          className={`cursor-pointer p-3.5 rounded-xl border transition-all ${statusFilter === 'Menunggu Pickup'
               ? 'bg-[#6d281e] text-[#ffffff] border-[#6d281e] shadow-md'
               : 'bg-[#ffffff] text-[#1c1a19] border-[#e8e7ec] hover:border-[#6d281e]'
-          }`}
+            }`}
         >
           <div className="text-[10px] font-extrabold tracking-wider uppercase opacity-75">Menunggu Pickup</div>
           <div className="text-2xl font-heading font-black mt-0.5">{counts.pickup.toLocaleString('id-ID')}</div>
@@ -315,11 +328,10 @@ export const TrackingPage: React.FC = () => {
                     <button
                       key={pNum}
                       onClick={() => setCurrentPage(pNum)}
-                      className={`w-7 h-7 rounded-lg text-xs font-extrabold transition-all ${
-                        currentPage === pNum
+                      className={`w-7 h-7 rounded-lg text-xs font-extrabold transition-all ${currentPage === pNum
                           ? 'bg-[#e53935] text-[#ffffff]'
                           : 'bg-[#f8f8fa] border border-[#d8d6dc] text-[#1c1a19] hover:bg-[#e8e7ec]'
-                      }`}
+                        }`}
                     >
                       {pNum}
                     </button>
