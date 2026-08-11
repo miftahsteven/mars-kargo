@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FolderDown, Eye, X, Download } from 'lucide-react';
+import { FolderDown, Eye, X, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PodItem } from '../../types/cargo';
 import { cargoService } from '../../services/cargoService';
 
@@ -14,7 +14,7 @@ interface EpodGalleryCardProps {
 export const EpodGalleryCard: React.FC<EpodGalleryCardProps> = ({
   podItems: propsPodItems,
   officerId,
-  limit = 10,
+  limit = 1000,
   order = 'desc',
   onBulkExport,
 }) => {
@@ -22,10 +22,15 @@ export const EpodGalleryCard: React.FC<EpodGalleryCardProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(!propsPodItems || propsPodItems.length === 0);
   const [previewPod, setPreviewPod] = useState<PodItem | null>(null);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
+  const itemsPerPage = 10;
+
   useEffect(() => {
     if (propsPodItems && propsPodItems.length > 0) {
       setData(propsPodItems);
       setIsLoading(false);
+      setCurrentPage(1);
       return;
     }
 
@@ -60,6 +65,23 @@ export const EpodGalleryCard: React.FC<EpodGalleryCardProps> = ({
     }
   };
 
+  const totalPages = Math.ceil(data.length / itemsPerPage);
+  const currentData = data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const isPageLoading = currentData.some(pod => !loadedImages[pod.resi]);
+
+  useEffect(() => {
+    if (isPageLoading) {
+      const timer = setTimeout(() => {
+        const newLoaded = { ...loadedImages };
+        currentData.forEach(pod => {
+          newLoaded[pod.resi] = true;
+        });
+        setLoadedImages(newLoaded);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isPageLoading, currentData, loadedImages]);
+
   if (isLoading && data.length === 0) {
     return (
       <div className="card shadow-sm p-4 h-[220px] flex items-center justify-center text-xs text-[#605d5d] font-semibold">
@@ -67,6 +89,16 @@ export const EpodGalleryCard: React.FC<EpodGalleryCardProps> = ({
       </div>
     );
   }
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const handleImageLoad = (resi: string) => {
+    setLoadedImages(prev => ({ ...prev, [resi]: true }));
+  };
 
   return (
     <div className="card shadow-sm gap-4 p-4">
@@ -90,63 +122,104 @@ export const EpodGalleryCard: React.FC<EpodGalleryCardProps> = ({
         </button> */}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
-        {data.map((pod, idx) => {
-          const imgUrl = pod.image_url || pod.photoUrl;
-          return (
-            <div
-              key={idx}
-              className="flex flex-col gap-2 bg-white p-2 border border-[#201e1d]/15 shadow-xs hover:border-[#ec3013] transition-all group"
-            >
-              {/* Image Preview Box */}
-              <div
-                className="w-full aspect-[4/3] relative cursor-pointer overflow-hidden border border-black/5 bg-[#eae7e7]"
-                onClick={() => setPreviewPod(pod)}
-              >
-                <img
-                  src={imgUrl}
-                  alt={pod.resi}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  loading="lazy"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=400&auto=format&fit=crop';
-                  }}
-                />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-bold z-10">
-                  <Eye className="w-4 h-4" />
-                  <span>Lihat Foto</span>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-0.5">
-                <div className="text-xs font-bold font-heading text-[#201e1d] truncate" title={pod.resi}>
-                  {pod.resi}
-                </div>
-                <div className="text-[11px] text-[#605d5d] line-clamp-2 leading-snug font-medium" title={pod.lokasi}>
-                  {pod.lokasi}
-                </div>
-                <div className="text-[10px] text-[#7d7979] font-semibold mt-0.5">
-                  {pod.tanggal}
-                </div>
-              </div>
-
-              <select
-                className="input text-[11px] py-1 px-2 cursor-pointer mt-auto bg-[#eae7e7]/50 border-[#201e1d]/20"
-                onChange={(e) => {
-                  handleDownload(pod, e.target.value);
-                  e.target.value = '';
-                }}
-                defaultValue=""
-              >
-                <option value="" disabled>Pilih unduhan…</option>
-                <option value="foto">Unduh Foto Original</option>
-                <option value="ttd">Unduh Tanda Tangan (PNG)</option>
-                <option value="pdf">Unduh Laporan POD (PDF)</option>
-              </select>
+      <div className="relative min-h-[250px]">
+        {isPageLoading && currentData.length > 0 && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/60 backdrop-blur-[1px]">
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-8 h-8 border-4 border-[#ec3013] border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-xs font-semibold text-[#201e1d]">Memuat halaman {currentPage}...</span>
             </div>
-          );
-        })}
+          </div>
+        )}
+
+        <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 transition-opacity duration-300 ${isPageLoading ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
+          {currentData.map((pod, idx) => {
+            const imgUrl = pod.image_url || pod.photoUrl;
+            return (
+              <div
+                key={pod.resi || idx}
+                className="flex flex-col gap-2 bg-white p-2 border border-[#201e1d]/15 shadow-xs hover:border-[#ec3013] transition-all group"
+              >
+                {/* Image Preview Box */}
+                <div
+                  className="w-full aspect-[4/3] relative cursor-pointer overflow-hidden border border-black/5 bg-[#eae7e7]"
+                  onClick={() => setPreviewPod(pod)}
+                >
+                  <img
+                    src={imgUrl}
+                    alt={pod.resi}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    loading="lazy"
+                    onLoad={() => handleImageLoad(pod.resi)}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=400&auto=format&fit=crop';
+                      handleImageLoad(pod.resi);
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-bold z-10">
+                    <Eye className="w-4 h-4" />
+                    <span>Lihat Foto</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-0.5">
+                  <div className="text-xs font-bold font-heading text-[#201e1d] truncate" title={pod.resi}>
+                    {pod.resi}
+                  </div>
+                  <div className="text-[11px] text-[#605d5d] line-clamp-2 leading-snug font-medium" title={pod.lokasi}>
+                    {pod.lokasi}
+                  </div>
+                  <div className="text-[10px] text-[#7d7979] font-semibold mt-0.5">
+                    {pod.tanggal}
+                  </div>
+                </div>
+
+                <select
+                  className="input text-[11px] py-1 px-2 cursor-pointer mt-auto bg-[#eae7e7]/50 border-[#201e1d]/20"
+                  onChange={(e) => {
+                    handleDownload(pod, e.target.value);
+                    e.target.value = '';
+                  }}
+                  defaultValue=""
+                >
+                  <option value="" disabled>Pilih unduhan…</option>
+                  <option value="foto">Unduh Foto Original</option>
+                  <option value="ttd">Unduh Tanda Tangan (PNG)</option>
+                  <option value="pdf">Unduh Laporan POD (PDF)</option>
+                </select>
+              </div>
+            );
+          })}
+        </div>
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between border-t border-[#201e1d]/10 pt-4 mt-2">
+          <div className="text-xs text-[#605d5d]">
+            Menampilkan <span className="font-bold text-[#201e1d]">{(currentPage - 1) * itemsPerPage + 1}</span> - <span className="font-bold text-[#201e1d]">{Math.min(currentPage * itemsPerPage, data.length)}</span> dari <span className="font-bold text-[#201e1d]">{data.length}</span> data
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="p-1 border border-[#201e1d]/20 rounded bg-white hover:bg-[#eae7e7] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <div className="px-2 text-xs font-semibold text-[#201e1d]">
+              {currentPage} / {totalPages}
+            </div>
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="p-1 border border-[#201e1d]/20 rounded bg-white hover:bg-[#eae7e7] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal Preview Image */}
       {previewPod && (

@@ -15,7 +15,6 @@ export const DashboardPage: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState('Semua Proyek');
   const [islands, setIslands] = useState<IslandData[]>([]);
   const [exceptions, setExceptions] = useState<ExceptionItem[]>([]);
-  const [podItems, setPodItems] = useState<PodItem[]>([]);
   const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
   const [shipments, setShipments] = useState<ShipmentItem[]>([]);
   const [totalShipments, setTotalShipments] = useState<number>(0);
@@ -49,12 +48,10 @@ export const DashboardPage: React.FC = () => {
     const fetchData = async () => {
       const islData = await cargoService.getIslandsData();
       const exData = await cargoService.getExceptions();
-      const podData = await cargoService.getPodItems({ limit: 10, order: 'desc' });
       const invData = await cargoService.getInvoices();
 
       setIslands(islData);
       setExceptions(exData);
-      setPodItems(podData);
       setInvoices(invData);
     };
 
@@ -144,7 +141,7 @@ export const DashboardPage: React.FC = () => {
       <ExceptionLogCard exceptions={exceptions} />
 
       {/* e-POD Gallery */}
-      <EpodGalleryCard podItems={podItems} />
+      <EpodGalleryCard />
 
       {/* Billing & LPJ Exporter */}
       <BillingLpjCard invoices={invoices} onExportLpj={handleExportLpj} />
