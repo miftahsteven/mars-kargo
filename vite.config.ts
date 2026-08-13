@@ -13,4 +13,19 @@ export default defineConfig({
     port: 3000,
     open: true,
   },
+  build: {
+    chunkSizeWarningLimit: 1600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('@maptiler')) {
+              return 'maptiler';
+            }
+            return 'vendor';
+          }
+        },
+      },
+    },
+  },
 });
