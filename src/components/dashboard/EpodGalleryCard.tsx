@@ -14,7 +14,7 @@ interface EpodGalleryCardProps {
 export const EpodGalleryCard: React.FC<EpodGalleryCardProps> = ({
   podItems: propsPodItems,
   officerId,
-  limit = 1000,
+  limit = 25000,
   order = 'desc',
   onBulkExport,
 }) => {
@@ -184,7 +184,7 @@ export const EpodGalleryCard: React.FC<EpodGalleryCardProps> = ({
                 >
                   <option value="" disabled>Pilih unduhan…</option>
                   <option value="foto">Unduh Foto Original</option>
-                  <option value="ttd">Unduh Tanda Tangan (PNG)</option>
+                  {/* <option value="ttd">Unduh Tanda Tangan (PNG)</option> */}
                   <option value="pdf">Unduh Laporan POD (PDF)</option>
                 </select>
               </div>

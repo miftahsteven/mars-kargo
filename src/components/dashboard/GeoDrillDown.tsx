@@ -1,149 +1,123 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft } from 'lucide-react';
-import { IslandData } from '../../types/cargo';
-import { cargoService } from '../../services/cargoService';
+import React, { useState } from 'react';
+import { ProvinceData } from '../../types/cargo';
 
 interface GeoDrillDownProps {
-  islands?: IslandData[];
+  islands?: any[];
   officerId?: number | string;
 }
 
-export const GeoDrillDown: React.FC<GeoDrillDownProps> = ({ islands: propsIslands, officerId }) => {
-  const [data, setData] = useState<IslandData[]>(propsIslands || []);
-  const [isLoading, setIsLoading] = useState<boolean>(!propsIslands || propsIslands.length === 0);
-  const [selectedIslandId, setSelectedIslandId] = useState<string | null>(null);
+const PROVINCES_DATA: ProvinceData[] = [
+  { name: 'SUMATERA UTARA', volume: 2452 },
+  { name: 'JAWA BARAT', volume: 2307 },
+  { name: 'JAWA TIMUR', volume: 1857 },
+  { name: 'ACEH', volume: 1838 },
+  { name: 'NTT', volume: 1657 },
+  { name: 'SULAWESI SELATAN', volume: 1188 },
+  { name: 'KALIMANTAN BARAT', volume: 983 },
+  { name: 'BANTEN', volume: 945 },
+  { name: 'LAMPUNG', volume: 847 },
+  { name: 'SUMATERA SELATAN', volume: 844 },
+  { name: 'MALUKU', volume: 835 },
+  { name: 'SUMATERA BARAT', volume: 811 },
+  { name: 'MALUKU UTARA', volume: 749 },
+  { name: 'NTB', volume: 738 },
+  { name: 'SULAWESI TENGAH', volume: 677 },
+  { name: 'JAWA TENGAH', volume: 673 },
+  { name: 'SULAWESI TENGGARA', volume: 592 },
+  { name: 'SULAWESI UTARA', volume: 575 },
+  { name: 'RIAU', volume: 572 },
+  { name: 'KALIMANTAN TENGAH', volume: 451 },
+  { name: 'JAMBI', volume: 363 },
+  { name: 'KALIMANTAN SELATAN', volume: 343 },
+  { name: 'SULAWESI BARAT', volume: 321 },
+  { name: 'BENGKULU', volume: 249 },
+  { name: 'GORONTALO', volume: 199 },
+  { name: 'KALIMANTAN TIMUR', volume: 195 },
+  { name: 'PAPUA', volume: 192 },
+  { name: 'PAPUA BARAT DAYA', volume: 185 },
+  { name: 'PAPUA BARAT', volume: 178 },
+  { name: 'BALI', volume: 147 },
+  { name: 'PAPUA SELATAN', volume: 142 },
+  { name: 'KALIMANTAN UTARA', volume: 131 },
+  { name: 'KEP. RIAU', volume: 125 },
+  { name: 'PAPUA PEGUNUNUNGAN', volume: 67 },
+  { name: 'DKI JAKARTA', volume: 63 },
+  { name: 'PAPUA TENGAH', volume: 51 },
+  { name: 'BANGKA BELITUNG', volume: 40 },
+  { name: 'DI YOGYAKARTA', volume: 27 },
+];
+
+export const GeoDrillDown: React.FC<GeoDrillDownProps> = () => {
   const [hoverId, setHoverId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (propsIslands && propsIslands.length > 0) {
-      setData(propsIslands);
-      setIsLoading(false);
-      return;
-    }
-
-    const fetchWilayahData = async () => {
-      setIsLoading(true);
-      const res = await cargoService.getIslandsData({ officer_id: officerId });
-      setData(res);
-      setIsLoading(false);
-    };
-
-    fetchWilayahData();
-  }, [propsIslands, officerId]);
-
-  const selectedIsland = data.find((i) => i.id === selectedIslandId) || null;
-  const totalVolume = data.reduce((acc, curr) => acc + curr.volume, 0);
-  const maxIslandVol = Math.max(...data.map((i) => i.volume), 1);
-
-  const maxProvVol = selectedIsland
-    ? Math.max(...selectedIsland.provinces.map((p) => p.volume), 1)
-    : 1;
-
-  if (isLoading && data.length === 0) {
-    return (
-      <div className="card shadow-sm p-4 h-[300px] flex items-center justify-center text-xs text-[#605d5d] font-semibold">
-        Memuat data pengiriman per wilayah...
-      </div>
-    );
-  }
+  const totalVolume = PROVINCES_DATA.reduce((acc, curr) => acc + curr.volume, 0);
+  const maxVol = Math.max(...PROVINCES_DATA.map((p) => p.volume), 1);
 
   return (
-    <div className="card shadow-sm gap-4 p-4 min-w-0 overflow-hidden">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="card-kicker">Distribusi Wilayah</div>
-          <h3 className="text-xl font-heading font-extrabold m-0">
-            {selectedIsland
-              ? `${selectedIsland.name} — Rincian Kota (${selectedIsland.provinces.length} Kota)`
-              : 'Volume per Pulau / Wilayah'}
-          </h3>
-        </div>
-        {selectedIsland && (
-          <button
-            className="btn btn-secondary text-xs"
-            onClick={() => setSelectedIslandId(null)}
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Kembali
-          </button>
-        )}
+    <div className="card shadow-sm gap-4 p-4 min-w-0 overflow-hidden relative">
+      <div>
+        <div className="card-kicker">Distribusi Wilayah</div>
+        <h3 className="text-xl font-heading font-extrabold m-0">
+          Volume per Provinsi ({PROVINCES_DATA.length} Provinsi)
+        </h3>
       </div>
 
-      {!selectedIsland ? (
-        /* Island Bar Chart with Horizontal Scroll */
-        <div className="w-full overflow-x-auto pb-3 pt-2 scrollbar-thin">
-          <div className="flex items-end gap-5 h-[235px] pt-14 min-w-max px-2">
-            {data.map((isl) => {
-              const pct = totalVolume > 0 ? ((isl.volume / totalVolume) * 100).toFixed(1) : '0';
-              const barHeight = Math.max(10, Math.round((isl.volume / maxIslandVol) * 160));
-              const isHovered = hoverId === isl.id;
-
-              return (
-                <div
-                  key={isl.id}
-                  onClick={() => setSelectedIslandId(isl.id)}
-                  onMouseEnter={() => setHoverId(isl.id)}
-                  onMouseLeave={() => setHoverId(null)}
-                  className="flex-none w-[64px] flex flex-col items-center gap-2 cursor-pointer relative group"
-                >
-                  {/* Tooltip */}
-                  {isHovered && (
-                    <div className="absolute -top-7 bg-[#2d2b2b] text-white px-2 py-1 text-[11px] font-bold whitespace-nowrap z-10 shadow-md">
-                      {pct}% ({isl.volume.toLocaleString('id-ID')} pengiriman)
-                    </div>
-                  )}
-                  <div className="text-[11px] font-bold whitespace-nowrap text-center text-[#201e1d]">
-                    {isl.volume.toLocaleString('id-ID')}{' '}
-                    <span className="text-[#7d7979] font-normal text-[10px]">({pct}%)</span>
-                  </div>
-
-                  {/* Bar */}
-                  <div
-                    className="w-[36px] transition-colors bg-[#bab6b6] group-hover:bg-[#ec3013]"
-                    style={{ height: `${barHeight}px` }}
-                  />
-
-                  <div
-                    className="text-[11px] text-center text-[#605d5d] leading-tight font-semibold truncate w-full"
-                    title={isl.name}
-                  >
-                    {isl.name}
-                  </div>
-                </div>
-              );
-            })}
+      {/* Horizontal Scroll Chart Area */}
+      <div className="w-full overflow-x-auto pb-4 pt-2 scrollbar-thin relative z-10">
+        <div className="flex items-end gap-1 h-[290px] pt-14 min-w-max px-2 relative">
+          
+          {/* Background Grid Lines */}
+          <div className="absolute left-0 right-0 bottom-[68px] top-[50px] flex flex-col justify-between pointer-events-none opacity-40 z-0">
+            <div className="border-b border-dashed border-[#eae7e7] w-full" />
+            <div className="border-b border-dashed border-[#eae7e7] w-full" />
+            <div className="border-b border-dashed border-[#eae7e7] w-full" />
+            <div className="border-b border-dashed border-[#eae7e7] w-full" />
           </div>
-        </div>
-      ) : (
-        /* City / Region Breakdown List */
-        <div className="flex flex-col gap-2.5 pt-1 max-h-[340px] overflow-y-auto pr-1.5 scrollbar-thin">
-          {selectedIsland.provinces.length === 0 ? (
-            <div className="text-xs text-[#605d5d] italic py-4">
-              Tidak ada data kota untuk wilayah ini.
-            </div>
-          ) : (
-            selectedIsland.provinces.map((pv, idx) => {
-              const widthPct = Math.max(2, Math.round((pv.volume / maxProvVol) * 100));
-              return (
-                <div key={idx} className="flex items-center gap-3 hover:bg-[#eae7e7]/60 p-1 transition-colors">
-                  <div className="w-40 sm:w-52 text-xs flex-none text-[#444141] font-semibold truncate" title={pv.name}>
-                    {pv.name}
+
+          {PROVINCES_DATA.map((pv, idx) => {
+            const pct = totalVolume > 0 ? ((pv.volume / totalVolume) * 100).toFixed(1) : '0';
+            const barHeight = Math.max(8, Math.round((pv.volume / maxVol) * 150));
+            const isHovered = hoverId === pv.name;
+
+            return (
+              <div
+                key={idx}
+                onMouseEnter={() => setHoverId(pv.name)}
+                onMouseLeave={() => setHoverId(null)}
+                className="flex-none w-[50px] flex flex-col items-center cursor-pointer relative group z-10"
+              >
+                {/* Tooltip on Hover */}
+                {isHovered && (
+                  <div className="absolute -top-9 bg-[#2d2b2b] text-white px-2 py-1 text-[10px] font-bold whitespace-nowrap z-30 shadow-md rounded">
+                    {pv.name}: {pct}% ({pv.volume.toLocaleString('id-ID')} pengiriman)
                   </div>
-                  <div className="flex-1 bg-[#eae7e7] h-4 relative">
-                    <div
-                      className="h-full bg-[#ec3013] transition-all"
-                      style={{ width: `${widthPct}%` }}
-                    />
-                  </div>
-                  <div className="w-16 text-right text-xs font-extrabold flex-none">
-                    {pv.volume.toLocaleString('id-ID')}
-                  </div>
+                )}
+
+                {/* Volume Label */}
+                <div className="text-[10px] font-extrabold whitespace-nowrap text-center text-[#201e1d] mb-1">
+                  {pv.volume.toLocaleString('id-ID')}
                 </div>
-              );
-            })
-          )}
+
+                {/* Vertical Bar */}
+                <div
+                  className="w-[44px] transition-all bg-[#bab6b6] group-hover:bg-[#ec3013] rounded-t-sm"
+                  style={{ height: `${barHeight}px` }}
+                />
+
+                {/* Baseline separator */}
+                <div className="w-full border-t border-[#eae7e7] my-2" />
+
+                {/* Horizontal Province Name */}
+                <div className="h-[36px] w-full flex items-start justify-center text-center mt-0.5 px-0.5">
+                  <span className="text-[9px] font-bold text-[#605d5d] group-hover:text-[#ec3013] transition-colors leading-tight line-clamp-2 break-words" title={pv.name}>
+                    {pv.name}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
-      )}
+      </div>
     </div>
   );
 };
