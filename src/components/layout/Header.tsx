@@ -13,10 +13,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
   const [trackingInput, setTrackingInput] = useState('');
   const [trackingResults, setTrackingResults] = useState<TrackingSearchResult[] | null>(null);
 
-  const handleTrackingSubmit = async () => {
-    if (!trackingInput.trim()) return;
-    const results = await cargoService.trackResi(trackingInput);
-    setTrackingResults(results);
+  const handleTrackingSubmit = () => {
+    window.location.href = 'https://cargo.marscargo.net/search-edit.php';
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
