@@ -3,6 +3,8 @@ import { FolderDown, Eye, X, Download, ChevronLeft, ChevronRight } from 'lucide-
 import { PodItem } from '../../types/cargo';
 import { cargoService } from '../../services/cargoService';
 
+const EPOD_TOTAL_COUNT = import.meta.env.VITE_EPOD_TOTAL_COUNT || '14909';
+
 interface EpodGalleryCardProps {
   podItems?: PodItem[];
   officerId?: number | string;
@@ -14,7 +16,7 @@ interface EpodGalleryCardProps {
 export const EpodGalleryCard: React.FC<EpodGalleryCardProps> = ({
   podItems: propsPodItems,
   officerId,
-  limit = 25000,
+  limit = 80000,
   order = 'desc',
   onBulkExport,
 }) => {
@@ -108,7 +110,7 @@ export const EpodGalleryCard: React.FC<EpodGalleryCardProps> = ({
           <h3 className="text-xl font-heading font-extrabold m-0 flex items-center gap-2">
             Galeri Foto &amp; Dokumen Digital
             <span className="text-xs bg-[#201e1d]/10 text-[#201e1d] px-2 py-0.5 font-bold rounded-full">
-              {data.length} Terbaru
+              {EPOD_TOTAL_COUNT} Terbaru
             </span>
           </h3>
         </div>
@@ -197,7 +199,7 @@ export const EpodGalleryCard: React.FC<EpodGalleryCardProps> = ({
       {totalPages > 1 && (
         <div className="flex items-center justify-between border-t border-[#201e1d]/10 pt-4 mt-2">
           <div className="text-xs text-[#605d5d]">
-            Menampilkan <span className="font-bold text-[#201e1d]">{(currentPage - 1) * itemsPerPage + 1}</span> - <span className="font-bold text-[#201e1d]">{Math.min(currentPage * itemsPerPage, data.length)}</span> dari <span className="font-bold text-[#201e1d]">{data.length}</span> data
+            Menampilkan <span className="font-bold text-[#201e1d]">{(currentPage - 1) * itemsPerPage + 1}</span> - <span className="font-bold text-[#201e1d]">{Math.min(currentPage * itemsPerPage, data.length)}</span> dari <span className="font-bold text-[#201e1d]">{EPOD_TOTAL_COUNT}</span> data
           </div>
           <div className="flex items-center gap-1">
             <button
