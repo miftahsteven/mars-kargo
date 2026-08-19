@@ -14,7 +14,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
   const [trackingResults, setTrackingResults] = useState<TrackingSearchResult[] | null>(null);
 
   const handleTrackingSubmit = () => {
-    window.location.href = 'https://cargo.marscargo.net/search-edit.php';
+    const consignment = encodeURIComponent(trackingInput.trim());
+    window.open(`https://cargo.marscargo.net/search-courier.php?Consignment=${consignment}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

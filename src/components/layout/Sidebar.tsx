@@ -16,8 +16,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { to: '/tracking', label: 'Pelacakan', icon: MapPin },
     { to: '/exceptions', label: 'Kendala', icon: AlertTriangle },
     { to: '/epod', label: 'Bukti Kirim (e-POD)', icon: ImageIcon },
-    { to: '/billing', label: 'Tagihan', icon: Receipt },
-    { to: '/lpj', label: 'Laporan LPJ', icon: FileSpreadsheet },
+    // { to: '/billing', label: 'Tagihan', icon: Receipt },
+    // { to: '/lpj', label: 'Laporan LPJ', icon: FileSpreadsheet },
   ];
 
   const sidebarContent = (
@@ -57,10 +57,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               to={item.to}
               onClick={onClose}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 text-sm font-semibold transition-colors border-l-4 ${
-                  isActive
-                    ? 'text-white bg-[#ec3013]/20 border-[#ec3013]'
-                    : 'text-white/65 hover:text-white hover:bg-white/5 border-transparent'
+                `flex items-center gap-3 px-3 py-2.5 text-sm font-semibold transition-colors border-l-4 ${isActive
+                  ? 'text-white bg-[#ec3013]/20 border-[#ec3013]'
+                  : 'text-white/65 hover:text-white hover:bg-white/5 border-transparent'
                 }`
               }
             >
