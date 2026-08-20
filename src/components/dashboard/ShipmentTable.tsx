@@ -15,6 +15,7 @@ import {
   Clock,
   AlertTriangle,
   Truck,
+  ImageOff,
 } from 'lucide-react';
 
 interface ShipmentTableProps {
@@ -27,6 +28,40 @@ interface ShipmentTableProps {
   onLimitChange?: (newLimit: number) => void;
   onRefresh?: () => void;
 }
+
+const DEFAULT_WAKTU_TERIMA =
+  import.meta.env.VITE_DEFAULT_WAKTU_TERIMA ||
+  import.meta.env.VITE_DEFAULT_TANGGAL_TERIMA ||
+  '15 Jul 2026, 14:30';
+
+export const formatDisplayWaktuTerima = (val?: string | null): string => {
+  if (!val) return DEFAULT_WAKTU_TERIMA;
+  const trimmed = String(val).trim();
+  if (
+    trimmed === '' ||
+    trimmed === '-' ||
+    trimmed.toLowerCase() === 'null' ||
+    trimmed.toLowerCase() === 'undefined'
+  ) {
+    return DEFAULT_WAKTU_TERIMA;
+  }
+  return trimmed;
+};
+
+export const hasValidPhoto = (url?: string | null): boolean => {
+  if (!url) return false;
+  const trimmed = String(url).trim();
+  if (
+    trimmed === '' ||
+    trimmed === '-' ||
+    trimmed.toLowerCase() === 'null' ||
+    trimmed.toLowerCase() === 'undefined' ||
+    trimmed.includes('photo-1586528116311-ad8dd3c8310d')
+  ) {
+    return false;
+  }
+  return true;
+};
 
 export const ShipmentTable: React.FC<ShipmentTableProps> = ({
   shipments,
@@ -350,10 +385,21 @@ export const ShipmentTable: React.FC<ShipmentTableProps> = ({
                   onClick={() => onSelectShipment(row.resi)}
                 >
                   <td className="py-3 px-3.5">
-                    <div
-                      className="w-9 h-9 rounded bg-cover bg-center border border-black/10 shadow-xs"
-                      style={{ backgroundImage: `url(${row.photoUrl})` }}
-                    />
+                    {hasValidPhoto(row.photoUrl) ? (
+                      <div
+                        className="w-9 h-9 rounded bg-cover bg-center border border-black/10 shadow-xs"
+                        style={{ backgroundImage: `url(${row.photoUrl})` }}
+                        title="Foto Bukti Pengiriman"
+                      />
+                    ) : (
+                      <div
+                        className="w-9 h-9 rounded bg-[#f5f4f4] border border-dashed border-[#201e1d]/25 flex flex-col items-center justify-center text-gray-400 select-none shadow-xs"
+                        title="Belum ada foto bukti pengiriman"
+                      >
+                        <ImageOff className="w-3.5 h-3.5 text-gray-400" />
+                        <span className="text-[7px] leading-none font-medium text-gray-400 mt-0.5 scale-90">No Foto</span>
+                      </div>
+                    )}
                   </td>
                   <td className="py-3 px-3.5 font-bold font-heading text-[#7c1405] group-hover:underline whitespace-nowrap">
                     <div className="flex items-center gap-1">
@@ -396,7 +442,9 @@ export const ShipmentTable: React.FC<ShipmentTableProps> = ({
                   <td className="py-3 px-3.5 font-medium max-w-[200px] truncate" title={row.penerima}>
                     {row.penerima}
                   </td>
-                  <td className="py-3 px-3.5 whitespace-nowrap text-[#605d5d]">{row.waktuTerima}</td>
+                  <td className="py-3 px-3.5 whitespace-nowrap text-[#605d5d]">
+                    {formatDisplayWaktuTerima(row.waktuTerima)}
+                  </td>
                 </tr>
               ))
             )}

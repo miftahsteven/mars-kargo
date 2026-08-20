@@ -569,7 +569,7 @@ export const cargoService = {
             tarif: item.tarif_kontrak || '-',
             penerima: item.penerima || penerimaObj.nama || '-',
             waktuTerima: item.waktu_diterima || '-',
-            photoUrl: appsPkg?.pickupPhotoUrl || item.foto || MOCK_PHOTOS.podHandoff1,
+            photoUrl: appsPkg?.pickupPhotoUrl || item.foto || '',
             pengirim: pengirimObj.nama || 'PUSAT PEMBINAAN BAHASA DAN SASTRA',
             teleponPengirim: pengirimObj.telepon || '-',
             alamatPengirim: pengirimObj.alamat || '-',

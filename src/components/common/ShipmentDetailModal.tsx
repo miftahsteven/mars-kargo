@@ -1,8 +1,9 @@
 import React from 'react';
-import { X, Barcode, Copy, Check } from 'lucide-react';
+import { X, Barcode, Copy, Check, ImageOff } from 'lucide-react';
 import { ShipmentItem } from '../../types/cargo';
 import { useAuth } from '../../context/AuthContext';
 import { PackageDetailMap } from './PackageDetailMap';
+import { formatDisplayWaktuTerima, hasValidPhoto } from '../dashboard/ShipmentTable';
 
 interface ShipmentDetailModalProps {
   shipment: ShipmentItem | null;
@@ -161,7 +162,7 @@ export const ShipmentDetailModal: React.FC<ShipmentDetailModalProps> = ({
           </div>
           <div className="flex justify-between">
             <span className="text-[#605d5d]">Waktu Diterima</span>
-            <span className="font-semibold">{shipment.waktuTerima}</span>
+            <span className="font-semibold">{formatDisplayWaktuTerima(shipment.waktuTerima)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-[#605d5d]">Keterangan</span>
@@ -222,10 +223,17 @@ export const ShipmentDetailModal: React.FC<ShipmentDetailModalProps> = ({
         {/* Photo Proof */}
         <div>
           <div className="card-kicker mb-2">Foto Bukti Pickup / Penerimaan</div>
-          <div
-            className="w-full max-w-xs aspect-[4/3] bg-cover bg-center border border-[#201e1d]/20 rounded"
-            style={{ backgroundImage: `url(${shipment.pickupPhotoUrl || shipment.photoUrl})` }}
-          />
+          {hasValidPhoto(shipment.pickupPhotoUrl || shipment.photoUrl) ? (
+            <div
+              className="w-full max-w-xs aspect-[4/3] bg-cover bg-center border border-[#201e1d]/20 rounded"
+              style={{ backgroundImage: `url(${shipment.pickupPhotoUrl || shipment.photoUrl})` }}
+            />
+          ) : (
+            <div className="w-full max-w-xs aspect-[4/3] bg-[#f5f4f4] border border-dashed border-[#201e1d]/20 rounded flex flex-col items-center justify-center text-gray-400 gap-2 p-4 select-none">
+              <ImageOff className="w-8 h-8 text-gray-400" />
+              <span className="text-xs font-medium text-gray-500">Belum ada foto bukti pengiriman</span>
+            </div>
+          )}
         </div>
 
         <div className="h-0.5 bg-[#201e1d]/20 my-1" />
