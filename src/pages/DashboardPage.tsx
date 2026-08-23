@@ -125,7 +125,7 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* KPI Stat Cards */}
-      <StatCards /> {/* manual proses */}
+      <StatCards /> manual proses
 
       {/* Geographic Drill Down & Status / SLA Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
@@ -147,7 +147,7 @@ export const DashboardPage: React.FC = () => {
       <BillingLpjCard invoices={invoices} onExportLpj={handleExportLpj} />
 
       {/* Shipment Table Preview with Real Data & Pagination */}
-      <ShipmentTable
+      {/* <ShipmentTable
         shipments={filteredShipments}
         totalItems={totalShipments || filteredShipments.length}
         selectedProject={selectedProject}
@@ -159,7 +159,7 @@ export const DashboardPage: React.FC = () => {
           fetchShipmentData(newLimit);
         }}
         onRefresh={() => fetchShipmentData(100)}
-      />
+      /> */}
 
       {/* Shipment Detail Modal with Barcode Display */}
       <ShipmentDetailModal

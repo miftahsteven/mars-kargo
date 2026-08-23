@@ -99,6 +99,47 @@ export const cargoService = {
     return activeSummaryPromise;
   },
 
+  getKurirCompletion: async (officerIdParam?: number | string): Promise<{ total_on_delivery: number; total_completed: number } | null> => {
+    const currentUser = authService.getCurrentUser();
+    const rawUserData = authService.getRawUserData();
+    const loggedInUserId = currentUser?.user_id || rawUserData?.user_id || 886;
+    const officerId = officerIdParam ?? loggedInUserId;
+
+    try {
+      const response = await axios.get('https://cargo.marscargo.net/api.php', {
+        params: {
+          action: 'get-kurir-completion',
+          officer_id: officerId,
+        },
+        headers: {
+          Authorization: 'KODE_RAHASIA_DASHBOARD_123',
+        },
+      });
+
+      let resData = response.data;
+      if (typeof resData === 'string') {
+        const jsonStartIndex = resData.indexOf('{');
+        if (jsonStartIndex !== -1) {
+          try {
+            resData = JSON.parse(resData.substring(jsonStartIndex));
+          } catch (e) {
+            console.warn('Failed to parse sanitized response:', e);
+          }
+        }
+      }
+
+      if (resData && resData.status === 'success' && resData.data_akumulasi) {
+        return {
+          total_on_delivery: Number(resData.data_akumulasi.total_on_delivery ?? 0),
+          total_completed: Number(resData.data_akumulasi.total_completed ?? 0),
+        };
+      }
+    } catch (err) {
+      console.warn('Failed to fetch kurir completion data:', err);
+    }
+    return null;
+  },
+
   getSummaryMetrics: async (params?: {
     officer_id?: number | string;
     start_date?: string;
@@ -111,41 +152,7 @@ export const cargoService = {
 
     const [d, kurirCompletion] = await Promise.all([
       cargoService.getRawSummaryMetrics(params),
-      (async () => {
-        try {
-          const response = await axios.get('https://cargo.marscargo.net/api.php', {
-            params: {
-              action: 'get-kurir-completion',
-              officer_id: officerId,
-            },
-            headers: {
-              Authorization: 'KODE_RAHASIA_DASHBOARD_123',
-            },
-          });
-
-          let resData = response.data;
-          if (typeof resData === 'string') {
-            const jsonStartIndex = resData.indexOf('{');
-            if (jsonStartIndex !== -1) {
-              try {
-                resData = JSON.parse(resData.substring(jsonStartIndex));
-              } catch (e) {
-                console.warn('Failed to parse sanitized response:', e);
-              }
-            }
-          }
-
-          if (resData && resData.status === 'success' && resData.data_akumulasi) {
-            return {
-              total_on_delivery: Number(resData.data_akumulasi.total_on_delivery ?? 0),
-              total_completed: Number(resData.data_akumulasi.total_completed ?? 0),
-            };
-          }
-        } catch (err) {
-          console.warn('Failed to fetch kurir completion data:', err);
-        }
-        return null;
-      })(),
+      cargoService.getKurirCompletion(officerId),
     ]);
 
     if (d) {

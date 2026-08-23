@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { cargoService, SummaryMetricsRaw } from '../../services/cargoService';
-import axios from 'axios';
-import { authService } from '../../services/authService';
 
 interface StatusSlaCardsProps {
   summaryData?: SummaryMetricsRaw | null;
@@ -36,39 +34,10 @@ export const StatusSlaCards: React.FC<StatusSlaCardsProps> = ({ summaryData: pro
 
   useEffect(() => {
     const fetchKurirCompletion = async () => {
-      const currentUser = authService.getCurrentUser();
-      const rawUserData = authService.getRawUserData();
-      const loggedInUserId = currentUser?.user_id || rawUserData?.user_id || 886;
-      const resolvedOfficerId = officerId ?? loggedInUserId;
-
       try {
-        const response = await axios.get('https://cargo.marscargo.net/api.php', {
-          params: {
-            action: 'get-kurir-completion',
-            officer_id: resolvedOfficerId,
-          },
-          headers: {
-            Authorization: 'KODE_RAHASIA_DASHBOARD_123',
-          },
-        });
-
-        let resData = response.data;
-        if (typeof resData === 'string') {
-          const jsonStartIndex = resData.indexOf('{');
-          if (jsonStartIndex !== -1) {
-            try {
-              resData = JSON.parse(resData.substring(jsonStartIndex));
-            } catch (e) {
-              console.warn('Failed to parse sanitized response:', e);
-            }
-          }
-        }
-
-        if (resData && resData.status === 'success' && resData.data_akumulasi) {
-          setKurirCompletion({
-            total_on_delivery: Number(resData.data_akumulasi.total_on_delivery ?? 0),
-            total_completed: Number(resData.data_akumulasi.total_completed ?? 0),
-          });
+        const completion = await cargoService.getKurirCompletion(officerId);
+        if (completion) {
+          setKurirCompletion(completion);
         }
       } catch (err) {
         console.warn('Failed to fetch kurir completion data:', err);

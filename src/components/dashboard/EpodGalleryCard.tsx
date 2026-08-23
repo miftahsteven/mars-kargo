@@ -3,11 +3,12 @@ import { FolderDown, Eye, X, Download, ChevronLeft, ChevronRight } from 'lucide-
 import { PodItem } from '../../types/cargo';
 import { cargoService } from '../../services/cargoService';
 
-const EPOD_TOTAL_COUNT = import.meta.env.VITE_EPOD_TOTAL_COUNT || '14909';
+const EPOD_TOTAL_COUNT = import.meta.env.VITE_EPOD_TOTAL_COUNT || '5618';
 
 interface EpodGalleryCardProps {
   podItems?: PodItem[];
   officerId?: number | string;
+  totalCount?: number | string;
   limit?: number;
   order?: string;
   onBulkExport?: () => void;
@@ -16,6 +17,7 @@ interface EpodGalleryCardProps {
 export const EpodGalleryCard: React.FC<EpodGalleryCardProps> = ({
   podItems: propsPodItems,
   officerId,
+  totalCount: propsTotalCount,
   limit = 80000,
   order = 'desc',
   onBulkExport,
@@ -24,9 +26,39 @@ export const EpodGalleryCard: React.FC<EpodGalleryCardProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(!propsPodItems || propsPodItems.length === 0);
   const [previewPod, setPreviewPod] = useState<PodItem | null>(null);
 
+  const [totalCount, setTotalCount] = useState<string>(() => {
+    if (propsTotalCount !== undefined) {
+      const num = Number(propsTotalCount);
+      return !isNaN(num) ? num.toLocaleString('id-ID') : String(propsTotalCount);
+    }
+    const parsed = Number(EPOD_TOTAL_COUNT);
+    return !isNaN(parsed) ? parsed.toLocaleString('id-ID') : EPOD_TOTAL_COUNT;
+  });
+
   const [currentPage, setCurrentPage] = useState(1);
   const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
   const itemsPerPage = 10;
+
+  useEffect(() => {
+    if (propsTotalCount !== undefined) {
+      const num = Number(propsTotalCount);
+      setTotalCount(!isNaN(num) ? num.toLocaleString('id-ID') : String(propsTotalCount));
+      return;
+    }
+
+    const fetchTotalCount = async () => {
+      try {
+        const completion = await cargoService.getKurirCompletion(officerId);
+        if (completion && typeof completion.total_completed === 'number') {
+          setTotalCount(completion.total_completed.toLocaleString('id-ID'));
+        }
+      } catch (err) {
+        console.warn('Failed to fetch EPOD total count:', err);
+      }
+    };
+
+    fetchTotalCount();
+  }, [propsTotalCount, officerId]);
 
   useEffect(() => {
     if (propsPodItems && propsPodItems.length > 0) {
@@ -110,7 +142,7 @@ export const EpodGalleryCard: React.FC<EpodGalleryCardProps> = ({
           <h3 className="text-xl font-heading font-extrabold m-0 flex items-center gap-2">
             Galeri Foto &amp; Dokumen Digital
             <span className="text-xs bg-[#201e1d]/10 text-[#201e1d] px-2 py-0.5 font-bold rounded-full">
-              {EPOD_TOTAL_COUNT} Terbaru
+              {totalCount} Terbaru
             </span>
           </h3>
         </div>
@@ -199,7 +231,7 @@ export const EpodGalleryCard: React.FC<EpodGalleryCardProps> = ({
       {totalPages > 1 && (
         <div className="flex items-center justify-between border-t border-[#201e1d]/10 pt-4 mt-2">
           <div className="text-xs text-[#605d5d]">
-            Menampilkan <span className="font-bold text-[#201e1d]">{(currentPage - 1) * itemsPerPage + 1}</span> - <span className="font-bold text-[#201e1d]">{Math.min(currentPage * itemsPerPage, data.length)}</span> dari <span className="font-bold text-[#201e1d]">{EPOD_TOTAL_COUNT}</span> data
+            Menampilkan <span className="font-bold text-[#201e1d]">{(currentPage - 1) * itemsPerPage + 1}</span> - <span className="font-bold text-[#201e1d]">{Math.min(currentPage * itemsPerPage, data.length)}</span> dari <span className="font-bold text-[#201e1d]">{totalCount}</span> data
           </div>
           <div className="flex items-center gap-1">
             <button
