@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Truck, LayoutDashboard, MapPin, AlertTriangle, Image as ImageIcon, Receipt, FileSpreadsheet, Building2, X } from 'lucide-react';
+import { Truck, LayoutDashboard, MapPin, AlertTriangle, Image as ImageIcon, Receipt, FileSpreadsheet, Building2, X, BarChart3 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 interface SidebarProps {
@@ -13,6 +13,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   const navItems = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/distribusi-real', label: 'Distribusi Real', icon: BarChart3 },
     { to: '/tracking', label: 'Pelacakan', icon: MapPin },
     { to: '/exceptions', label: 'Kendala', icon: AlertTriangle },
     { to: '/epod', label: 'Bukti Kirim (e-POD)', icon: ImageIcon },

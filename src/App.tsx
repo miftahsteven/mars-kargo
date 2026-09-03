@@ -8,6 +8,7 @@ import { TrackingPage } from './pages/TrackingPage';
 import { ExceptionsPage } from './pages/ExceptionsPage';
 import { EpodPage } from './pages/EpodPage';
 import { BillingLpjPage } from './pages/BillingLpjPage';
+import { DistribusiRealPage } from './pages/DistribusiRealPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -42,6 +43,7 @@ export const AppContent: React.FC = () => {
       >
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="distribusi-real" element={<DistribusiRealPage />} />
         <Route path="tracking" element={<TrackingPage />} />
         <Route path="exceptions" element={<ExceptionsPage />} />
         <Route path="epod" element={<EpodPage />} />
