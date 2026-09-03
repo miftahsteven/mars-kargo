@@ -19,6 +19,8 @@ import {
   ShieldCheck,
   Package,
   GraduationCap,
+  Clock,
+  Info,
 } from 'lucide-react';
 
 export const DistribusiRealPage: React.FC = () => {
@@ -94,16 +96,44 @@ export const DistribusiRealPage: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-6 pb-12">
+      {/* Top Notice Banner: Fitur Dalam Pengembangan & Segera Dirilis */}
+      <div className="bg-[#fff8e1] border-l-4 border-[#f59e0b] p-3.5 sm:p-4 text-[#201e1d] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-start sm:items-center gap-3">
+          <div className="w-8 h-8 rounded-none bg-[#f59e0b]/20 text-[#b45309] flex items-center justify-center flex-none mt-0.5 sm:mt-0">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] font-black tracking-widest uppercase bg-[#b45309] text-white px-2 py-0.5">
+                SEGERA DIRILIS
+              </span>
+              <span className="text-xs font-bold text-[#201e1d]">
+                Fitur Dalam Tahap Pengembangan Akhir
+              </span>
+            </div>
+            <p className="text-xs text-[#605d5d] mt-0.5 m-0 leading-relaxed">
+              Halaman visualisasi <strong>Distribusi Real</strong> ini masih dalam proses pengembangan dan penyempurnaan integrasi. Fitur ini akan segera dirilis secara penuh untuk mempermudah monitoring pengiriman berjenjang Anda.
+            </p>
+          </div>
+        </div>
+        <div className="flex-none self-end sm:self-center">
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#b45309] bg-white px-2.5 py-1 border border-[#f59e0b]/30 whitespace-nowrap">
+            <Clock className="w-3.5 h-3.5" />
+            Rilis Versi 1.2
+          </span>
+        </div>
+      </div>
+
       {/* Top Header Row */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2 py-0.5 text-[10px] font-black tracking-widest uppercase bg-[#ec3013] text-white">
-              B2B EIS · LIVE MONITORING
+              B2B EIS · PRATINJAU FITUR
             </span>
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#137333]">
-              <span className="w-2 h-2 rounded-full bg-[#137333] animate-ping" />
-              Sistem Aktif & Terhubung
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#b45309]">
+              <span className="w-2 h-2 rounded-full bg-[#f59e0b] animate-ping" />
+              Segera Dirilis
             </span>
           </div>
 
