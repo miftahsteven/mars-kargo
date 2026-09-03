@@ -1,11 +1,35 @@
 import axios from 'axios';
 
-// Dedicated backend server for MarsCargo Distribusi Real
-const BACKEND_URL =
-  import.meta.env.VITE_BACKEND_API_URL ||
-  (typeof window !== 'undefined' && window.location.hostname === 'localhost'
-    ? 'http://localhost:7030'
-    : 'https://apps-api.marscargo.net');
+function resolveBackendUrl(): string {
+  let raw = (import.meta.env.VITE_BACKEND_API_URL || '').trim();
+
+  // If the user or hosting environment accidentally included the variable name in the value:
+  if (raw.startsWith('VITE_BACKEND_API_URL=')) {
+    raw = raw.replace(/^VITE_BACKEND_API_URL=\s*/i, '').trim();
+  }
+
+  // Automatic environment detection
+  const isLocal = typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.startsWith('192.168.')
+  );
+
+  // If we are in production (e.g. dashboard.marscargo.net), never allow a localhost URL
+  if (!isLocal && raw.includes('localhost')) {
+    return 'https://apps-api.marscargo.net';
+  }
+
+  // If raw contains a valid http/https URL, extract it
+  const match = raw.match(/https?:\/\/[^\s'"]+/i);
+  if (match) {
+    return match[0].replace(/\/+$/, '');
+  }
+
+  return isLocal ? 'http://localhost:7030' : 'https://apps-api.marscargo.net';
+}
+
+const BACKEND_URL = resolveBackendUrl();
 
 const client = axios.create({
   baseURL: `${BACKEND_URL}/api/distribusi-real`,
