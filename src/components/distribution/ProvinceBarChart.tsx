@@ -5,23 +5,26 @@ import { Search, ArrowUpDown, ChevronLeft, ChevronRight, CheckCircle } from 'luc
 interface ProvinceBarChartProps {
   selectedProvince: string;
   onSelectProvince: (provName: string) => void;
+  provinces?: { name: string; volume: number }[];
 }
 
 export const ProvinceBarChart: React.FC<ProvinceBarChartProps> = ({
   selectedProvince,
   onSelectProvince,
+  provinces,
 }) => {
+  const activeProvincesList = provinces && provinces.length > 0 ? provinces : BASE_PROVINCES;
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'volume-desc' | 'volume-asc' | 'name'>('volume-desc');
   const [hoverId, setHoverId] = useState<string | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const totalVolumeAll = useMemo(() => {
-    return BASE_PROVINCES.reduce((acc, curr) => acc + curr.volume, 0);
-  }, []);
+    return activeProvincesList.reduce((acc, curr) => acc + curr.volume, 0);
+  }, [activeProvincesList]);
 
   const sortedProvinces = useMemo(() => {
-    let list = [...BASE_PROVINCES];
+    let list = [...activeProvincesList];
 
     if (searchTerm.trim()) {
       const q = searchTerm.toLowerCase().trim();
@@ -40,8 +43,8 @@ export const ProvinceBarChart: React.FC<ProvinceBarChartProps> = ({
   }, [searchTerm, sortBy]);
 
   const maxVol = useMemo(() => {
-    return Math.max(...BASE_PROVINCES.map((p) => p.volume), 1);
-  }, []);
+    return Math.max(...activeProvincesList.map((p) => p.volume), 1);
+  }, [activeProvincesList]);
 
   const handleScroll = (dir: 'left' | 'right') => {
     if (scrollContainerRef.current) {
@@ -50,7 +53,7 @@ export const ProvinceBarChart: React.FC<ProvinceBarChartProps> = ({
     }
   };
 
-  const selectedData = BASE_PROVINCES.find((p) => p.name === selectedProvince);
+  const selectedData = activeProvincesList.find((p) => p.name === selectedProvince);
 
   return (
     <div className="card shadow-sm p-4 sm:p-5 min-w-0 overflow-hidden relative border border-black/10 bg-[#eae9e9]">
@@ -62,7 +65,7 @@ export const ProvinceBarChart: React.FC<ProvinceBarChartProps> = ({
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="text-xl sm:text-2xl font-heading font-extrabold text-[#201e1d] m-0">
-              Volume per Provinsi ({BASE_PROVINCES.length} Provinsi)
+              Volume per Provinsi ({activeProvincesList.length} Provinsi)
             </h3>
             {selectedData && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-bold bg-[#ec3013] text-white rounded-none shadow-sm">

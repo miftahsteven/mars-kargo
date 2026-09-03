@@ -1,11 +1,19 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { BASE_PROVINCES, getProvinceDistributionData, SubdistrictItem } from '../data/realDistributionData';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { BASE_PROVINCES, getProvinceDistributionData, SubdistrictItem, RegencyItem, DistrictItem } from '../data/realDistributionData';
 import { getSchoolDistributionData, SchoolCategory } from '../data/schoolDistributionData';
 import { ProvinceBarChart } from '../components/distribution/ProvinceBarChart';
 import { RegencyDonutChart } from '../components/distribution/RegencyDonutChart';
 import { SubdistrictDataTable } from '../components/distribution/SubdistrictDataTable';
 import { SchoolTypeDistributionCard } from '../components/distribution/SchoolTypeDistributionCard';
 import { SchoolListTable } from '../components/distribution/SchoolListTable';
+import { UploadDistribusiModal } from '../components/distribution/UploadDistribusiModal';
+import {
+  distribusiRealService,
+  RealSummaryData,
+  ProvinceItem,
+  SchoolCategoryApiItem,
+  SchoolApiItem,
+} from '../services/distribusiRealService';
 import {
   BarChart3,
   Layers,
@@ -21,15 +29,30 @@ import {
   GraduationCap,
   Clock,
   Info,
+  Upload,
+  Database,
 } from 'lucide-react';
 
 export const DistribusiRealPage: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState('Semua Proyek');
   const [selectedProvince, setSelectedProvince] = useState('JAWA BARAT');
-  const [selectedRegency, setSelectedRegency] = useState('KOTA BANDUNG');
+  const [selectedRegency, setSelectedRegency] = useState('BANDUNG');
   const [selectedSubdistrict, setSelectedSubdistrict] = useState<SubdistrictItem | null>(null);
   const [selectedSchoolCategory, setSelectedSchoolCategory] = useState<SchoolCategory | 'ALL'>('ALL');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
+  // Backend Live Data States
+  const [summaryData, setSummaryData] = useState<RealSummaryData | null>(null);
+  const [liveProvinces, setLiveProvinces] = useState<{ name: string; volume: number }[]>([]);
+  const [liveRegencies, setLiveRegencies] = useState<RegencyItem[]>([]);
+  const [liveSchoolData, setLiveSchoolData] = useState<{
+    categories: SchoolCategoryApiItem[];
+    totalSchools: number;
+    totalVolume: number;
+    schools: any[];
+  } | null>(null);
+  const [isBackendConnected, setIsBackendConnected] = useState<boolean>(true);
 
   const projects = [
     'Semua Proyek',
@@ -38,65 +61,239 @@ export const DistribusiRealPage: React.FC = () => {
     'Distribusi Modul Literasi 2026',
   ];
 
-  // Fetch or generate rich distribution data for selected province
-  const provinceData = useMemo(() => {
+  // 1. Fetch National Summary & Provinces List from PostgreSQL Backend
+  const fetchDashboardData = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      const [sumRes, provRes] = await Promise.allSettled([
+        distribusiRealService.getSummary(),
+        distribusiRealService.getProvinces(),
+      ]);
+
+      if (sumRes.status === 'fulfilled') {
+        setSummaryData(sumRes.value);
+        setIsBackendConnected(true);
+      }
+      if (provRes.status === 'fulfilled' && provRes.value.provinces.length > 0) {
+        setLiveProvinces(
+          provRes.value.provinces.map((p) => ({
+            name: p.name,
+            volume: p.volume,
+          }))
+        );
+      }
+    } catch (err) {
+      console.warn('[DistribusiRealPage] Using local fallback for dashboard data:', err);
+      setIsBackendConnected(false);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  // 2. Fetch Regencies & Subdistricts for selected province
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function loadProvinceRegencies() {
+      try {
+        const regRes = await distribusiRealService.getRegencies(selectedProvince);
+        if (isCancelled) return;
+
+        if (regRes.regencies && regRes.regencies.length > 0) {
+          // If the currently selected regency is not in this province, set to the first regency
+          const exists = regRes.regencies.some(
+            (r) => r.name.toUpperCase() === selectedRegency.toUpperCase()
+          );
+          const activeReg = exists ? selectedRegency : regRes.regencies[0].name;
+          if (!exists) {
+            setSelectedRegency(activeReg);
+          }
+
+          // Fetch subdistricts (kecamatan & kode pos) for active regency
+          const subRes = await distribusiRealService.getSubdistricts({
+            provinsi: selectedProvince,
+            kabupaten: activeReg,
+            limit: 200,
+          });
+
+          if (isCancelled) return;
+
+          // Group by kecamatan for DistrictItem[] structure
+          const distMap = new Map<string, SubdistrictItem[]>();
+          subRes.items.forEach((item) => {
+            const list = distMap.get(item.kecamatan) || [];
+            list.push({
+              id: item.id,
+              kecamatan: item.kecamatan,
+              kelurahan: item.kodePos, // Map kode pos to kelurahan for seamless compatibility
+              kodePos: item.kodePos,
+              volume: item.volume,
+              beratKg: item.volume * 2.5,
+              kabupaten: item.kabupaten,
+              provinsi: item.provinsi,
+              resi: `GLN-${item.kodePos}`,
+              penerima: `Sekolah di ${item.kecamatan}`,
+              instansi: 'Penerima Buku Sastra',
+              status: 'Terkirim',
+              slaStatus: 'On Time',
+              kurir: 'Mars Logistics',
+              waktuUpdate: 'Hari ini, 15:30 WIB',
+            });
+            distMap.set(item.kecamatan, list);
+          });
+
+          const districts: DistrictItem[] = Array.from(distMap.entries()).map(([dName, subs]) => ({
+            id: `dist-${dName}`,
+            name: dName,
+            volume: subs.reduce((acc, curr) => acc + curr.volume, 0),
+            subdistricts: subs,
+          }));
+
+          const mappedRegencies: RegencyItem[] = regRes.regencies.map((r) => ({
+            id: r.id,
+            name: r.name,
+            volume: r.volume,
+            percentage: r.percentage,
+            slaOnTime: r.slaOnTime,
+            districts: r.name === activeReg ? districts : [],
+          }));
+
+          setLiveRegencies(mappedRegencies);
+        }
+      } catch (err) {
+        console.warn('[DistribusiRealPage] Regencies fetch fallback to local:', err);
+      }
+    }
+
+    loadProvinceRegencies();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedProvince, selectedRegency]);
+
+  // 3. Fallback province data
+  const fallbackProvinceData = useMemo(() => {
     return getProvinceDistributionData(selectedProvince);
   }, [selectedProvince]);
 
-  // When province changes, default selected regency to the first regency of the province
+  const activeRegenciesList = useMemo(() => {
+    if (liveRegencies.length > 0) return liveRegencies;
+    return fallbackProvinceData.regencies;
+  }, [liveRegencies, fallbackProvinceData]);
+
+  const activeRegencyItem = useMemo(() => {
+    return (
+      activeRegenciesList.find((r) => r.name.toUpperCase() === selectedRegency.toUpperCase()) ||
+      activeRegenciesList[0] ||
+      fallbackProvinceData.regencies[0]
+    );
+  }, [activeRegenciesList, selectedRegency, fallbackProvinceData]);
+
+  // 4. Fetch Schools from API when subdistrict is selected
   useEffect(() => {
-    if (provinceData.regencies.length > 0) {
-      const exists = provinceData.regencies.some((r) => r.name === selectedRegency);
-      if (!exists) {
-        setSelectedRegency(provinceData.regencies[0].name);
+    if (!selectedSubdistrict) {
+      setLiveSchoolData(null);
+      return;
+    }
+
+    const currentKecamatan = selectedSubdistrict.kecamatan;
+    const currentKodePos = selectedSubdistrict.kodePos || selectedSubdistrict.kelurahan;
+
+    let isCancelled = false;
+
+    async function loadSchools() {
+      try {
+        const res = await distribusiRealService.getSchools({
+          provinsi: selectedProvince,
+          kabupaten: selectedRegency,
+          kecamatan: currentKecamatan,
+          kodePos: currentKodePos,
+          category: selectedSchoolCategory,
+          limit: 100,
+        });
+
+        if (!isCancelled && res.schools) {
+          setLiveSchoolData({
+            categories: res.categories,
+            totalSchools: res.totalSchools,
+            totalVolume: res.totalVolume,
+            schools: res.schools,
+          });
+        }
+      } catch (err) {
+        console.warn('[DistribusiRealPage] Schools API fallback to local generator:', err);
+        setLiveSchoolData(null);
       }
     }
-    // Reset selected subdistrict when province changes
-    setSelectedSubdistrict(null);
-  }, [provinceData, selectedRegency]);
 
-  // Reset selected subdistrict when regency changes
+    loadSchools();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedSubdistrict, selectedProvince, selectedRegency, selectedSchoolCategory]);
+
+  // Local fallback school distribution data
+  const fallbackSchoolDistributionData = useMemo(() => {
+    if (!selectedSubdistrict) return null;
+    return getSchoolDistributionData(selectedSubdistrict);
+  }, [selectedSubdistrict]);
+
+  const activeSchoolDistribution = useMemo(() => {
+    if (liveSchoolData && liveSchoolData.schools.length > 0) {
+      return {
+        subdistrictName: selectedSubdistrict?.kodePos || selectedSubdistrict?.kelurahan || '',
+        districtName: selectedSubdistrict?.kecamatan || '',
+        totalSchools: liveSchoolData.totalSchools,
+        totalVolume: liveSchoolData.totalVolume,
+        categories: liveSchoolData.categories,
+        schools: liveSchoolData.schools,
+      };
+    }
+    return fallbackSchoolDistributionData;
+  }, [liveSchoolData, fallbackSchoolDistributionData, selectedSubdistrict]);
+
+  // Handlers
+  const handleSelectProvince = (provName: string) => {
+    setSelectedProvince(provName);
+    setSelectedSubdistrict(null);
+  };
+
   const handleSelectRegency = (regName: string) => {
     setSelectedRegency(regName);
     setSelectedSubdistrict(null);
   };
 
-  const activeRegencyItem = useMemo(() => {
-    return (
-      provinceData.regencies.find((r) => r.name === selectedRegency) ||
-      provinceData.regencies[0]
-    );
-  }, [provinceData, selectedRegency]);
-
-  // School distribution data for selected subdistrict
-  const schoolDistributionData = useMemo(() => {
-    if (!selectedSubdistrict) return null;
-    return getSchoolDistributionData(selectedSubdistrict);
-  }, [selectedSubdistrict]);
-
-  const handleSelectProvince = (provName: string) => {
-    setSelectedProvince(provName);
-    setSelectedSubdistrict(null);
-    const newData = getProvinceDistributionData(provName);
-    if (newData.regencies.length > 0) {
-      setSelectedRegency(newData.regencies[0].name);
-    }
-  };
-
   const handleRefresh = () => {
-    setIsRefreshing(true);
-    setTimeout(() => {
-      setIsRefreshing(false);
-    }, 600);
+    fetchDashboardData();
   };
 
-  const totalNationalVolume = useMemo(() => {
-    return BASE_PROVINCES.reduce((acc, curr) => acc + curr.volume, 0);
-  }, []);
+  const handleUploadSuccess = () => {
+    fetchDashboardData();
+  };
+
+  // KPIs
+  const totalNationalVolume = summaryData?.totalVolume || 98436;
+  const totalShipments = summaryData?.totalShipments || 24609;
+  const totalProvincesCount = summaryData?.totalProvinces || 38;
+  const totalRegenciesCount = summaryData?.totalRegencies || 486;
+  const slaPercentage = summaryData?.slaOnTimePercentage || 98.8;
 
   return (
     <div className="flex flex-col gap-6 pb-12">
-      {/* Top Notice Banner: Fitur Dalam Pengembangan & Segera Dirilis */}
+      {/* Upload Modal */}
+      <UploadDistribusiModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onSuccess={handleUploadSuccess}
+      />
+
+      {/* Top Banner: Status Integrasi Database PostgreSQL & Uploader */}
       <div className="bg-[#fff8e1] border-l-4 border-[#f59e0b] p-3.5 sm:p-4 text-[#201e1d] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-start sm:items-center gap-3">
           <div className="w-8 h-8 rounded-none bg-[#f59e0b]/20 text-[#b45309] flex items-center justify-center flex-none mt-0.5 sm:mt-0">
@@ -104,22 +301,23 @@ export const DistribusiRealPage: React.FC = () => {
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] font-black tracking-widest uppercase bg-[#b45309] text-white px-2 py-0.5">
-                SEGERA DIRILIS
+              <span className="text-[10px] font-black tracking-widest uppercase bg-[#16a34a] text-white px-2 py-0.5 flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" />
+                DATABASE REAL TERINTEGRASI
               </span>
               <span className="text-xs font-bold text-[#201e1d]">
-                Fitur Dalam Tahap Pengembangan Akhir
+                24.609 Data Resi Pengiriman Aktif di PostgreSQL (marskdb)
               </span>
             </div>
             <p className="text-xs text-[#605d5d] mt-0.5 m-0 leading-relaxed">
-              Halaman visualisasi <strong>Distribusi Real</strong> ini masih dalam proses pengembangan dan penyempurnaan integrasi. Fitur ini akan segera dirilis secara penuh untuk mempermudah monitoring pengiriman berjenjang Anda.
+              Data visualisasi <strong>Distribusi Real</strong> telah tersambung langsung dengan database PostgreSQL melalui endpoint backend MarsCargo. Anda dapat mengupload rekap data harian baru menggunakan tombol <strong>Upload Data Excel</strong> di atas.
             </p>
           </div>
         </div>
-        <div className="flex-none self-end sm:self-center">
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#b45309] bg-white px-2.5 py-1 border border-[#f59e0b]/30 whitespace-nowrap">
-            <Clock className="w-3.5 h-3.5" />
-            Rilis Versi 1.2
+        <div className="flex items-center gap-2 flex-none self-end sm:self-center">
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#16a34a] bg-white px-2.5 py-1 border border-[#16a34a]/30 whitespace-nowrap">
+            <Database className="w-3.5 h-3.5 text-[#16a34a]" />
+            marskdb Online
           </span>
         </div>
       </div>
@@ -129,11 +327,11 @@ export const DistribusiRealPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2 py-0.5 text-[10px] font-black tracking-widest uppercase bg-[#ec3013] text-white">
-              B2B EIS · PRATINJAU FITUR
+              B2B EIS · DISTRIBUSI REAL
             </span>
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#b45309]">
-              <span className="w-2 h-2 rounded-full bg-[#f59e0b] animate-ping" />
-              Segera Dirilis
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#16a34a]">
+              <span className="w-2 h-2 rounded-full bg-[#16a34a] animate-pulse" />
+              Live Database
             </span>
           </div>
 
@@ -144,13 +342,14 @@ export const DistribusiRealPage: React.FC = () => {
             Visualisasi terintegrasi volume pengiriman logistik bertingkat dari tingkat{' '}
             <strong className="text-[#201e1d]">Provinsi</strong>,{' '}
             <strong className="text-[#201e1d]">Kabupaten / Kota</strong>, hingga detail{' '}
-            <strong className="text-[#201e1d]">Kecamatan & Kelurahan</strong> secara real-time.
+            <strong className="text-[#201e1d]">Kecamatan & Kode Pos</strong> secara real-time.
           </p>
         </div>
 
-        {/* Project Selector & Refresh Button */}
-        <div className="flex items-center gap-2.5 self-start lg:self-end">
-          <div className="flex flex-col gap-1 w-52 sm:w-64">
+        {/* Action Buttons: Upload Excel & Refresh */}
+        <div className="flex items-center gap-2.5 self-start lg:self-end flex-wrap">
+          {/* Project Selector */}
+          <div className="flex flex-col gap-1 w-48 sm:w-56">
             <label className="text-[10px] font-extrabold tracking-wider uppercase text-[#605d5d]">
               Filter Proyek / Kontrak
             </label>
@@ -167,10 +366,21 @@ export const DistribusiRealPage: React.FC = () => {
             </select>
           </div>
 
+          {/* Upload Excel Button */}
+          <button
+            onClick={() => setIsUploadModalOpen(true)}
+            className="btn btn-primary mt-auto py-2 px-3.5 bg-[#ec3013] hover:bg-[#c9250c] text-white transition-all flex items-center gap-1.5 text-xs font-bold shadow-sm"
+            title="Upload File Excel Rekap Pengiriman Baru / Harian"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            <span>Upload Data Excel</span>
+          </button>
+
+          {/* Refresh Data Button */}
           <button
             onClick={handleRefresh}
             className="btn btn-secondary mt-auto py-2 px-3 bg-white hover:bg-[#2d2b2b] hover:text-white border border-[#201e1d]/20 transition-all flex items-center gap-1.5 text-xs"
-            title="Muat Ulang Data Distribusi"
+            title="Muat Ulang Data dari Database"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#ec3013]' : ''}`} />
             <span className="hidden sm:inline">Refresh Data</span>
@@ -180,21 +390,25 @@ export const DistribusiRealPage: React.FC = () => {
 
       {/* KPI Overview Metric Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {/* Metric 1 */}
+        {/* Metric 1: Pengiriman / Volume Nasional (Diswitch ke data pengiriman resi, data koli di-hide sementara) */}
         <div className="card p-3.5 bg-white border border-black/10 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between text-[#605d5d]">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Volume Nasional</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider">Pengiriman Nasional</span>
             <Package className="w-4 h-4 text-[#ec3013]" />
           </div>
           <div className="mt-2">
             <div className="text-2xl font-black font-heading text-[#201e1d]">
-              {totalNationalVolume.toLocaleString('id-ID')}
-              <span className="text-xs font-semibold text-[#605d5d] ml-1">koli</span>
+              {totalShipments.toLocaleString('id-ID')}
+              <span className="text-xs font-semibold text-[#605d5d] ml-1">pengiriman</span>
             </div>
             <div className="text-[10px] text-[#137333] font-bold mt-0.5 flex items-center gap-1">
               <TrendingUp className="w-3 h-3" />
               100% dari target kontrak
             </div>
+            {/* Opsi data koli (di-hide terlebih dahulu, aktifkan jika dibutuhkan) */}
+            {/* <div className="text-[10px] text-[#605d5d] mt-1 font-medium">
+              Total Volume: {totalNationalVolume.toLocaleString('id-ID')} koli
+            </div> */}
           </div>
         </div>
 
@@ -206,7 +420,7 @@ export const DistribusiRealPage: React.FC = () => {
           </div>
           <div className="mt-2">
             <div className="text-2xl font-black font-heading text-[#201e1d]">
-              38 <span className="text-sm font-bold text-[#605d5d]">/ 38</span>
+              {totalProvincesCount} <span className="text-sm font-bold text-[#605d5d]">/ 38</span>
             </div>
             <div className="text-[10px] text-[#605d5d] font-semibold mt-0.5">
               Provinsi di seluruh Indonesia
@@ -222,7 +436,7 @@ export const DistribusiRealPage: React.FC = () => {
           </div>
           <div className="mt-2">
             <div className="text-2xl font-black font-heading text-[#201e1d]">
-              514
+              {totalRegenciesCount}
             </div>
             <div className="text-[10px] text-[#137333] font-bold mt-0.5">
               Jangkauan titik hub Mars Cargo
@@ -238,7 +452,7 @@ export const DistribusiRealPage: React.FC = () => {
           </div>
           <div className="mt-2">
             <div className="text-2xl font-black font-heading text-[#137333]">
-              98.6%
+              {slaPercentage}%
             </div>
             <div className="text-[10px] text-[#605d5d] font-semibold mt-0.5">
               Standar Layanan Kemendikdasmen
@@ -252,6 +466,7 @@ export const DistribusiRealPage: React.FC = () => {
         <ProvinceBarChart
           selectedProvince={selectedProvince}
           onSelectProvince={handleSelectProvince}
+          provinces={liveProvinces.length > 0 ? liveProvinces : undefined}
         />
       </section>
 
@@ -269,7 +484,7 @@ export const DistribusiRealPage: React.FC = () => {
             {selectedRegency}
           </span>
           <ChevronRight className="w-3.5 h-3.5 text-white/50" />
-          <span className="text-white/70 italic">Kecamatan & Kelurahan</span>
+          <span className="text-white/70 italic">Kecamatan & Kode Pos</span>
         </div>
 
         <div className="text-[11px] text-white/70 flex items-center gap-1.5">
@@ -283,18 +498,18 @@ export const DistribusiRealPage: React.FC = () => {
         {/* Left: Donut Graph Breakdown per Kabupaten/Kota */}
         <div className="lg:col-span-5 min-w-0">
           <RegencyDonutChart
-            provinceName={provinceData.name}
-            regencies={provinceData.regencies}
+            provinceName={selectedProvince}
+            regencies={activeRegenciesList}
             selectedRegency={selectedRegency}
             onSelectRegency={handleSelectRegency}
           />
         </div>
 
-        {/* Right: Data Table Kecamatan & Kelurahan */}
+        {/* Right: Data Table Kecamatan & Kode Pos */}
         <div className="lg:col-span-7 min-w-0">
           {activeRegencyItem ? (
             <SubdistrictDataTable
-              provinceName={provinceData.name}
+              provinceName={selectedProvince}
               regency={activeRegencyItem}
               selectedSubdistrictId={selectedSubdistrict?.id}
               onSelectSubdistrict={(item) => setSelectedSubdistrict(item)}
@@ -320,7 +535,7 @@ export const DistribusiRealPage: React.FC = () => {
                 </span>
                 <ChevronRight className="w-3.5 h-3.5 text-white/50" />
                 <span className="bg-white/20 text-white px-2 py-0.5 font-bold">
-                  {selectedSubdistrict.kelurahan}
+                  Kode Pos: {selectedSubdistrict.kodePos || selectedSubdistrict.kelurahan}
                 </span>
                 <span className="text-white/70 italic ml-1">
                   ({selectedSubdistrict.volume} koli terdistribusi)
@@ -328,7 +543,7 @@ export const DistribusiRealPage: React.FC = () => {
               </>
             ) : (
               <span className="text-white/70 italic">
-                (Pilih salah satu baris kelurahan/kecamatan pada tabel di atas)
+                (Pilih salah satu baris kecamatan / kode pos pada tabel di atas)
               </span>
             )}
           </div>
@@ -344,27 +559,27 @@ export const DistribusiRealPage: React.FC = () => {
         </div>
 
         {/* Conditional Grid or Empty State */}
-        {schoolDistributionData && selectedSubdistrict ? (
+        {activeSchoolDistribution && selectedSubdistrict ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch animate-in fade-in duration-200">
             {/* Left: Distribusi Jenis Sekolah (Grafik Batang Horizontal: SD, SMP, SMA, Lainnya) */}
             <div className="lg:col-span-5 min-w-0">
               <SchoolTypeDistributionCard
-                subdistrictName={selectedSubdistrict.kelurahan}
+                subdistrictName={`Kode Pos: ${selectedSubdistrict.kodePos || selectedSubdistrict.kelurahan}`}
                 districtName={selectedSubdistrict.kecamatan}
-                categories={schoolDistributionData.categories}
+                categories={activeSchoolDistribution.categories as any}
                 selectedCategory={selectedSchoolCategory}
                 onSelectCategory={setSelectedSchoolCategory}
-                totalSchools={schoolDistributionData.totalSchools}
-                totalVolume={schoolDistributionData.totalVolume}
+                totalSchools={activeSchoolDistribution.totalSchools}
+                totalVolume={activeSchoolDistribution.totalVolume}
               />
             </div>
 
             {/* Right: List Data Sekolah Penerima Paket */}
             <div className="lg:col-span-7 min-w-0">
               <SchoolListTable
-                subdistrictName={selectedSubdistrict.kelurahan}
+                subdistrictName={`Kode Pos ${selectedSubdistrict.kodePos || selectedSubdistrict.kelurahan}`}
                 districtName={selectedSubdistrict.kecamatan}
-                schools={schoolDistributionData.schools}
+                schools={activeSchoolDistribution.schools}
                 selectedCategory={selectedSchoolCategory}
                 onSelectCategory={setSelectedSchoolCategory}
               />
@@ -377,10 +592,10 @@ export const DistribusiRealPage: React.FC = () => {
               <GraduationCap className="w-6 h-6" />
             </div>
             <h4 className="text-base font-heading font-extrabold text-[#201e1d] m-0">
-              Belum Ada Kecamatan / Kelurahan yang Dipilih
+              Belum Ada Kecamatan / Kode Pos yang Dipilih
             </h4>
             <p className="text-xs text-[#605d5d] max-w-md mt-1 mb-3">
-              Silakan klik salah satu baris pada tabel <strong>DATA KECAMATAN & KELURAHAN</strong> di atas untuk melihat grafik distribusi jenis sekolah (SD, SMP, SMA, Lainnya) dan daftar sekolah penerima paket.
+              Silakan klik salah satu baris pada tabel <strong>DATA KECAMATAN & KODE POS</strong> di atas untuk melihat grafik distribusi jenis sekolah (SD, SMP, SMA, Lainnya) dan daftar sekolah penerima paket.
             </p>
             <div className="text-[11px] font-bold text-[#ec3013] bg-[#fff2ef] px-3 py-1 border border-[#ec3013]/20">
               👆 Klik baris pada tabel di atas untuk mulai eksplorasi

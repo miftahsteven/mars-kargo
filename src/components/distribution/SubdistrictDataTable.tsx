@@ -34,9 +34,9 @@ export const SubdistrictDataTable: React.FC<SubdistrictDataTableProps> = ({
   selectedSubdistrictId,
   onSelectSubdistrict,
 }) => {
-  // Cascading Filter states
+  // Cascading Filter states: Kecamatan -> Kode Pos
   const [selectedDistrict, setSelectedDistrict] = useState<string>('SEMUA_KECAMATAN');
-  const [selectedSubdistrict, setSelectedSubdistrict] = useState<string>('SEMUA_KELURAHAN');
+  const [selectedPostalCode, setSelectedPostalCode] = useState<string>('SEMUA_KODE_POS');
   const [statusFilter, setStatusFilter] = useState<string>('Semua');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -51,16 +51,16 @@ export const SubdistrictDataTable: React.FC<SubdistrictDataTableProps> = ({
   // Reset filters when the selected Regency changes
   useEffect(() => {
     setSelectedDistrict('SEMUA_KECAMATAN');
-    setSelectedSubdistrict('SEMUA_KELURAHAN');
+    setSelectedPostalCode('SEMUA_KODE_POS');
     setSearchQuery('');
     setStatusFilter('Semua');
     setCurrentPage(1);
   }, [regency.name]);
 
-  // When selected district changes, reset kelurahan filter if it doesn't belong to the new district
+  // When selected district changes, reset postal code filter
   const handleDistrictChange = (newDistrict: string) => {
     setSelectedDistrict(newDistrict);
-    setSelectedSubdistrict('SEMUA_KELURAHAN');
+    setSelectedPostalCode('SEMUA_KODE_POS');
     setCurrentPage(1);
   };
 
@@ -69,17 +69,25 @@ export const SubdistrictDataTable: React.FC<SubdistrictDataTableProps> = ({
     return regency.districts.flatMap((dist) => dist.subdistricts);
   }, [regency]);
 
-  // Available Kelurahan options based on the active Kecamatan filter (Cascading!)
-  const availableSubdistrictOptions = useMemo(() => {
+  // Available Kode Pos options based on the active Kecamatan filter (Cascading!)
+  const availablePostalCodeOptions = useMemo(() => {
     if (selectedDistrict === 'SEMUA_KECAMATAN') {
       const set = new Set<string>();
-      allSubdistrictItems.forEach((item) => set.add(item.kelurahan));
+      allSubdistrictItems.forEach((item) => {
+        const val = item.kodePos || item.kelurahan;
+        if (val) set.add(val);
+      });
       return Array.from(set).sort();
     }
 
     const dist = regency.districts.find((d) => d.name === selectedDistrict);
     if (!dist) return [];
-    return dist.subdistricts.map((s) => s.kelurahan).sort();
+    const set = new Set<string>();
+    dist.subdistricts.forEach((s) => {
+      const val = s.kodePos || s.kelurahan;
+      if (val) set.add(val);
+    });
+    return Array.from(set).sort();
   }, [selectedDistrict, regency, allSubdistrictItems]);
 
   // Filtered dataset
@@ -90,8 +98,9 @@ export const SubdistrictDataTable: React.FC<SubdistrictDataTableProps> = ({
         return false;
       }
 
-      // 2. Filter Kelurahan (Cascading)
-      if (selectedSubdistrict !== 'SEMUA_KELURAHAN' && item.kelurahan !== selectedSubdistrict) {
+      // 2. Filter Kode Pos (Cascading)
+      const itemPostal = item.kodePos || item.kelurahan;
+      if (selectedPostalCode !== 'SEMUA_KODE_POS' && itemPostal !== selectedPostalCode) {
         return false;
       }
 
@@ -104,20 +113,20 @@ export const SubdistrictDataTable: React.FC<SubdistrictDataTableProps> = ({
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const matchResi = item.resi.toLowerCase().includes(q);
-        const matchKel = item.kelurahan.toLowerCase().includes(q);
+        const matchPostal = (item.kodePos || item.kelurahan || '').toLowerCase().includes(q);
         const matchKec = item.kecamatan.toLowerCase().includes(q);
         const matchPenerima = item.penerima.toLowerCase().includes(q);
         const matchInstansi = item.instansi.toLowerCase().includes(q);
         const matchKurir = item.kurir.toLowerCase().includes(q);
 
-        if (!matchResi && !matchKel && !matchKec && !matchPenerima && !matchInstansi && !matchKurir) {
+        if (!matchResi && !matchPostal && !matchKec && !matchPenerima && !matchInstansi && !matchKurir) {
           return false;
         }
       }
 
       return true;
     });
-  }, [allSubdistrictItems, selectedDistrict, selectedSubdistrict, statusFilter, searchQuery]);
+  }, [allSubdistrictItems, selectedDistrict, selectedPostalCode, statusFilter, searchQuery]);
 
   // Pagination calculation
   const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
@@ -139,7 +148,7 @@ export const SubdistrictDataTable: React.FC<SubdistrictDataTableProps> = ({
           'Provinsi',
           'Kabupaten / Kota',
           'Kecamatan',
-          'Kelurahan / Desa',
+          'Kode Pos',
           'Volume (Koli)',
           'Berat (Kg)',
           'Penerima',
@@ -149,26 +158,17 @@ export const SubdistrictDataTable: React.FC<SubdistrictDataTableProps> = ({
           'SLA Status',
           'Waktu Update',
         ]
-      : [
-          'No',
-          'Provinsi',
-          'Kabupaten / Kota',
-          'Kecamatan',
-          'Kelurahan / Desa',
-          'Kode Pos',
-          'Volume (Koli)',
-          'Berat (Kg)',
-        ];
+      : ['No', 'Provinsi', 'Kabupaten / Kota', 'Kecamatan', 'Kode Pos', 'Volume (Koli)'];
 
     const rows = filteredData.map((item, idx) =>
       SHOW_EXTENDED_COLUMNS
         ? [
             idx + 1,
             `"${item.resi}"`,
-            `"${provinceName}"`,
-            `"${regency.name}"`,
+            `"${item.provinsi}"`,
+            `"${item.kabupaten}"`,
             `"${item.kecamatan}"`,
-            `"${item.kelurahan}"`,
+            `"${item.kodePos || item.kelurahan}"`,
             item.volume,
             item.beratKg,
             `"${item.penerima}"`,
@@ -180,13 +180,11 @@ export const SubdistrictDataTable: React.FC<SubdistrictDataTableProps> = ({
           ]
         : [
             idx + 1,
-            `"${provinceName}"`,
-            `"${regency.name}"`,
+            `"${item.provinsi}"`,
+            `"${item.kabupaten}"`,
             `"${item.kecamatan}"`,
-            `"${item.kelurahan}"`,
-            `"${item.kodePos}"`,
+            `"${item.kodePos || item.kelurahan}"`,
             item.volume,
-            item.beratKg,
           ]
     );
 
@@ -242,13 +240,13 @@ export const SubdistrictDataTable: React.FC<SubdistrictDataTableProps> = ({
           <div>
             <div className="card-kicker flex items-center gap-1.5 text-[10px] tracking-widest text-[#ec3013] font-extrabold uppercase">
               <MapPin className="w-3.5 h-3.5" />
-              DATA KECAMATAN & KELURAHAN
+              DATA KECAMATAN & KODE POS
             </div>
             <h3 className="text-lg sm:text-xl font-heading font-extrabold text-[#201e1d] m-0">
               Sebaran: {regency.name}
             </h3>
             <div className="text-xs text-[#605d5d] mt-0.5">
-              Provinsi {provinceName} · Total {allSubdistrictItems.length} Titik Kelurahan/Desa
+              Provinsi {provinceName} · Total {allSubdistrictItems.length} Titik Kode Pos
             </div>
           </div>
 
@@ -261,7 +259,7 @@ export const SubdistrictDataTable: React.FC<SubdistrictDataTableProps> = ({
           </button>
         </div>
 
-        {/* Filter Bar (Cascading: Kecamatan -> Kelurahan) */}
+        {/* Filter Bar (Cascading: Kecamatan -> Kode Pos) */}
         <div
           className={`grid gap-2.5 my-3 p-3 bg-white/50 border border-black/10 ${
             SHOW_EXTENDED_COLUMNS ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-3'
@@ -281,33 +279,33 @@ export const SubdistrictDataTable: React.FC<SubdistrictDataTableProps> = ({
               <option value="SEMUA_KECAMATAN">Semua Kecamatan ({regency.districts.length})</option>
               {regency.districts.map((d) => (
                 <option key={d.name} value={d.name}>
-                  {d.name} ({d.subdistricts.length} kel)
+                  {d.name} ({d.subdistricts.length} pos)
                 </option>
               ))}
             </select>
           </div>
 
-          {/* 2. Filter Bertingkat: Kelurahan */}
+          {/* 2. Filter Bertingkat: Kode Pos */}
           <div className="flex flex-col gap-1">
             <label className="text-[10px] font-extrabold tracking-wider uppercase text-[#605d5d]">
-              Filter Kelurahan / Desa
+              Filter Kode Pos
             </label>
             <select
-              value={selectedSubdistrict}
+              value={selectedPostalCode}
               onChange={(e) => {
-                setSelectedSubdistrict(e.target.value);
+                setSelectedPostalCode(e.target.value);
                 setCurrentPage(1);
               }}
               className="input py-1 text-xs bg-white border border-[#201e1d]/30 font-semibold cursor-pointer"
             >
-              <option value="SEMUA_KELURAHAN">
+              <option value="SEMUA_KODE_POS">
                 {selectedDistrict === 'SEMUA_KECAMATAN'
-                  ? `Semua Kelurahan (${availableSubdistrictOptions.length})`
-                  : `Semua Kelurahan di ${selectedDistrict}`}
+                  ? `Semua Kode Pos (${availablePostalCodeOptions.length})`
+                  : `Semua Kode Pos di ${selectedDistrict}`}
               </option>
-              {availableSubdistrictOptions.map((subName) => (
-                <option key={subName} value={subName}>
-                  {subName}
+              {availablePostalCodeOptions.map((pos) => (
+                <option key={pos} value={pos}>
+                  Kode Pos {pos}
                 </option>
               ))}
             </select>
@@ -328,24 +326,24 @@ export const SubdistrictDataTable: React.FC<SubdistrictDataTableProps> = ({
                 className="input py-1 text-xs bg-white border border-[#201e1d]/30 font-semibold cursor-pointer"
               >
                 <option value="Semua">Semua Status</option>
-                <option value="Terkirim">Terkirim (100%)</option>
-                <option value="Dalam Pengiriman">Dalam Pengiriman</option>
+                <option value="Terkirim">Terkirim</option>
+                <option value="Dalam Pengiriman">On Delivery</option>
                 <option value="Transit">Transit Hub</option>
                 <option value="Kendala">Kendala</option>
               </select>
             </div>
           )}
 
-          {/* 4. Search Query */}
+          {/* 4. Quick Search Input */}
           <div className="flex flex-col gap-1">
             <label className="text-[10px] font-extrabold tracking-wider uppercase text-[#605d5d]">
-              Cari Data
+              Pencarian Cepat
             </label>
             <div className="relative">
               <Search className="w-3.5 h-3.5 text-[#605d5d] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Cari nama kelurahan / kecamatan..."
+                placeholder="Cari kecamatan / kode pos..."
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -387,7 +385,7 @@ export const SubdistrictDataTable: React.FC<SubdistrictDataTableProps> = ({
                   Kecamatan
                 </th>
                 <th className="py-2.5 px-3 !text-[#201e1d] font-heading font-black tracking-wider text-[11px] uppercase">
-                  Kelurahan / Desa
+                  Kode Pos
                 </th>
                 <th className="py-2.5 px-3 !text-[#201e1d] font-heading font-black tracking-wider text-[11px] uppercase text-center">
                   Volume
@@ -463,63 +461,42 @@ export const SubdistrictDataTable: React.FC<SubdistrictDataTableProps> = ({
                       )}
 
                       {/* Kecamatan */}
-                      <td className="py-2.5 px-3 text-[#201e1d] font-bold whitespace-nowrap">
+                      <td className="py-2.5 px-3 font-bold text-[#201e1d]">
                         {item.kecamatan}
                       </td>
 
-                      {/* Kelurahan */}
-                      <td className="py-2.5 px-3 whitespace-nowrap">
-                        <span
-                          className={`font-heading font-extrabold px-2 py-0.5 border ${
-                            isRowSelected
-                              ? 'bg-white text-[#ec3013] border-[#ec3013]'
-                              : 'bg-[#f3f2f2] text-[#201e1d] border-black/5'
-                          }`}
-                        >
-                          {item.kelurahan}
-                        </span>
-                        <span className="text-[10px] text-[#605d5d] ml-1.5 font-mono">
-                          ({item.kodePos})
-                        </span>
-                        {isRowSelected && (
-                          <span className="text-[9px] font-black uppercase tracking-wider bg-[#ec3013] text-white px-1.5 py-0.5 ml-2">
-                            Dipilih
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Volume */}
-                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        <span className="font-extrabold font-heading text-sm text-[#ec3013]">
-                          {item.volume}
-                        </span>
-                        <span className="text-[10px] text-[#201e1d] font-semibold ml-1">
-                          koli ({item.beratKg} kg)
+                      {/* Kode Pos (Replaced Kelurahan) */}
+                      <td className="py-2.5 px-3 font-mono font-bold text-[#201e1d]">
+                        <span className="bg-white/80 px-2 py-0.5 border border-black/10">
+                          {item.kodePos || item.kelurahan || '-'}
                         </span>
                       </td>
 
-                      {/* Extended Columns (Penerima, Status, Aksi) */}
+                      {/* Volume Koli */}
+                      <td className="py-2.5 px-3 text-center font-heading font-black text-[#201e1d]">
+                        <span className="bg-[#f0eceb] px-2 py-0.5 rounded-none font-bold">
+                          {item.volume.toLocaleString('id-ID')} koli
+                        </span>
+                      </td>
+
+                      {/* Extended Columns */}
                       {SHOW_EXTENDED_COLUMNS && (
                         <>
                           <td className="py-2.5 px-3">
-                            <div className="font-bold text-[#201e1d] line-clamp-1">{item.instansi}</div>
-                            <div className="text-[10px] text-[#605d5d] flex items-center gap-1">
-                              <span>Kurir: {item.kurir}</span>
-                            </div>
+                            <div className="font-bold text-[#201e1d]">{item.penerima}</div>
+                            <div className="text-[11px] text-[#605d5d]">{item.instansi}</div>
                           </td>
-
-                          <td className="py-2.5 px-3 whitespace-nowrap">
+                          <td className="py-2.5 px-3">
                             <div>{renderStatusBadge(item.status)}</div>
-                            <div className="text-[10px] text-[#605d5d] mt-0.5">{item.waktuUpdate}</div>
+                            <div className="text-[10px] text-[#605d5d] mt-1">{item.waktuUpdate}</div>
                           </td>
-
-                          <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                          <td className="py-2.5 px-3 text-center">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setModalItem(item);
                               }}
-                              className="btn btn-ghost text-[11px] py-1 px-2 hover:bg-[#ec3013] hover:text-white transition-colors"
+                              className="px-2 py-1 bg-white hover:bg-[#201e1d] hover:text-white border border-[#201e1d]/30 text-[11px] font-bold transition-colors inline-flex items-center gap-1"
                             >
                               Detail
                             </button>
@@ -535,111 +512,99 @@ export const SubdistrictDataTable: React.FC<SubdistrictDataTableProps> = ({
         </div>
       </div>
 
-      {/* Pagination & Summary Footer */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-3 mt-2 border-t border-[#201e1d]/10">
-        <div className="text-xs text-[#605d5d]">
-          Menampilkan <span className="font-bold text-[#201e1d]">{filteredData.length > 0 ? startIndex + 1 : 0}</span> -{' '}
+      {/* Pagination & Footer summary */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 mt-3 border-t border-[#201e1d]/10 text-xs text-[#605d5d]">
+        <div className="font-medium">
+          Menampilkan <span className="font-bold text-[#201e1d]">{filteredData.length === 0 ? 0 : startIndex + 1}</span> -{' '}
           <span className="font-bold text-[#201e1d]">{Math.min(startIndex + itemsPerPage, filteredData.length)}</span> dari{' '}
-          <span className="font-bold text-[#201e1d]">{filteredData.length}</span> kelurahan/desa
+          <span className="font-bold text-[#201e1d]">{filteredData.length}</span> baris
         </div>
 
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="p-1 text-xs border border-[#201e1d]/20 bg-white hover:bg-[#ec3013] hover:text-white disabled:opacity-40 disabled:hover:bg-white disabled:hover:text-[#201e1d] transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <span className="px-2 text-xs font-bold text-[#201e1d]">
-            Halaman {currentPage} / {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="p-1 text-xs border border-[#201e1d]/20 bg-white hover:bg-[#ec3013] hover:text-white disabled:opacity-40 disabled:hover:bg-white disabled:hover:text-[#201e1d] transition-colors"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
+        {totalPages > 1 && (
+          <div className="flex items-center gap-1 self-start sm:self-auto">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="p-1.5 border border-[#201e1d]/20 bg-white hover:bg-[#201e1d] hover:text-white disabled:opacity-40 disabled:hover:bg-white disabled:hover:text-inherit cursor-pointer transition-colors"
+              title="Halaman sebelumnya"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+
+            <span className="px-3 py-1 font-bold text-[#201e1d] bg-white/70 border border-[#201e1d]/20">
+              {currentPage} / {totalPages}
+            </span>
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="p-1.5 border border-[#201e1d]/20 bg-white hover:bg-[#201e1d] hover:text-white disabled:opacity-40 disabled:hover:bg-white disabled:hover:text-inherit cursor-pointer transition-colors"
+              title="Halaman berikutnya"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Modal Detail Resi Kelurahan */}
+      {/* Detail Modal if row clicked */}
       {modalItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#eae9e9] border-2 border-[#201e1d] w-full max-w-lg shadow-2xl p-5 relative animate-in fade-in zoom-in-95 duration-150">
-            {/* Modal Header */}
-            <div className="flex items-start justify-between pb-3 border-b-2 border-[#201e1d]/20">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="bg-white border border-[#201e1d] shadow-2xl max-w-md w-full p-5 flex flex-col gap-4">
+            <div className="flex items-start justify-between border-b border-[#201e1d]/10 pb-3">
               <div>
-                <div className="card-kicker text-[10px] tracking-widest text-[#ec3013] font-bold">
-                  KONSINYASI PENGIRIMAN B2B
-                </div>
-                <h4 className="text-xl font-heading font-black text-[#201e1d] m-0">
-                  {modalItem.resi}
+                <span className="text-[10px] font-black uppercase tracking-wider text-[#ec3013]">
+                  Detail Distribusi Real
+                </span>
+                <h4 className="text-base font-heading font-extrabold text-[#201e1d] m-0">
+                  {modalItem.kecamatan} (Kode Pos: {modalItem.kodePos || modalItem.kelurahan})
                 </h4>
               </div>
               <button
                 onClick={() => setModalItem(null)}
-                className="p-1 text-[#201e1d] hover:bg-[#ec3013] hover:text-white transition-colors"
+                className="text-[#605d5d] hover:text-[#201e1d] p-1"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Modal Body */}
-            <div className="my-4 flex flex-col gap-3 text-xs">
-              {/* Barcode Mock */}
-              <div className="bg-white p-3 border border-black/10 flex flex-col items-center justify-center">
-                <div className="font-mono text-lg tracking-widest font-black text-[#201e1d]">
-                  ||| | | |||| || ||||| ||| ||| |
-                </div>
-                <div className="text-[10px] font-mono text-[#605d5d] mt-1">{modalItem.resi}</div>
+            <div className="flex flex-col gap-2.5 text-xs text-[#201e1d]">
+              <div className="flex justify-between py-1 border-b border-black/5">
+                <span className="text-[#605d5d]">Provinsi & Kab/Kota:</span>
+                <span className="font-bold">{modalItem.provinsi}, {modalItem.kabupaten}</span>
               </div>
-
-              <div className="grid grid-cols-2 gap-2 bg-white/70 p-3 border border-black/10">
-                <div>
-                  <span className="text-[10px] text-[#605d5d] font-bold uppercase">Wilayah</span>
-                  <div className="font-bold text-[#201e1d]">{modalItem.provinsi}</div>
-                  <div className="text-[#605d5d]">{modalItem.kabupaten}</div>
-                </div>
-                <div>
-                  <span className="text-[10px] text-[#605d5d] font-bold uppercase">Kecamatan & Kelurahan</span>
-                  <div className="font-bold text-[#ec3013]">{modalItem.kecamatan}</div>
-                  <div className="text-[#201e1d] font-bold">{modalItem.kelurahan} ({modalItem.kodePos})</div>
-                </div>
+              <div className="flex justify-between py-1 border-b border-black/5">
+                <span className="text-[#605d5d]">Nomor Resi:</span>
+                <span className="font-mono font-bold text-[#ec3013]">{modalItem.resi}</span>
               </div>
-
-              <div className="grid grid-cols-2 gap-2 bg-white/70 p-3 border border-black/10">
-                <div>
-                  <span className="text-[10px] text-[#605d5d] font-bold uppercase">Volume & Muatan</span>
-                  <div className="font-bold text-[#201e1d] text-sm">{modalItem.volume} Koli ({modalItem.beratKg} Kg)</div>
-                  <div className="text-[#605d5d]">Buku Sastra & Modul Literasi</div>
-                </div>
-                <div>
-                  <span className="text-[10px] text-[#605d5d] font-bold uppercase">Status Terakhir</span>
-                  <div className="mt-1">{renderStatusBadge(modalItem.status)}</div>
-                  <div className="text-[10px] text-[#605d5d] mt-1">{modalItem.waktuUpdate}</div>
-                </div>
+              <div className="flex justify-between py-1 border-b border-black/5">
+                <span className="text-[#605d5d]">Kode Pos:</span>
+                <span className="font-mono font-bold">{modalItem.kodePos || modalItem.kelurahan}</span>
               </div>
-
-              <div className="bg-white/70 p-3 border border-black/10">
-                <span className="text-[10px] text-[#605d5d] font-bold uppercase">Alamat Tujuan & Penerima</span>
-                <div className="font-bold text-[#201e1d] text-sm mt-0.5">{modalItem.instansi}</div>
-                <div className="text-[#605d5d] mt-0.5">{modalItem.alamatLengkap}</div>
-                <div className="mt-2 pt-2 border-t border-[#201e1d]/10 flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#605d5d]">Petugas / Kurir Lapangan:</span>
-                  <span className="font-bold text-[#201e1d]">{modalItem.kurir}</span>
-                </div>
+              <div className="flex justify-between py-1 border-b border-black/5">
+                <span className="text-[#605d5d]">Volume & Berat:</span>
+                <span className="font-bold">{modalItem.volume} Koli ({modalItem.beratKg} Kg)</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-black/5">
+                <span className="text-[#605d5d]">Penerima:</span>
+                <span className="font-bold">{modalItem.penerima} ({modalItem.instansi})</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-black/5">
+                <span className="text-[#605d5d]">Status:</span>
+                <span>{renderStatusBadge(modalItem.status)}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-black/5">
+                <span className="text-[#605d5d]">SLA Layanan:</span>
+                <span className="font-bold text-[#137333]">{modalItem.slaStatus}</span>
               </div>
             </div>
 
-            {/* Modal Footer */}
-            <div className="flex justify-end gap-2 pt-2 border-t border-[#201e1d]/10">
+            <div className="pt-2 flex justify-end">
               <button
                 onClick={() => setModalItem(null)}
-                className="btn btn-primary text-xs py-1.5 px-4"
+                className="btn btn-secondary text-xs px-4 py-1.5 border border-black/20"
               >
-                Tutup Detail
+                Tutup
               </button>
             </div>
           </div>
