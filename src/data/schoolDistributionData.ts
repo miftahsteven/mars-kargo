@@ -147,20 +147,17 @@ export function getSchoolDistributionData(subdistrict: SubdistrictItem): SchoolD
     }
   };
 
-  // Generate proportionate schools per category
+  // Generate proportionate schools per category (2 kategori: SD dan Lainnya)
   addCategorySchools(sdNames, 'SD', 'Sekolah Dasar (SD/MI)', 4);
-  addCategorySchools(smpNames, 'SMP', 'Sekolah Menengah Pertama (SMP/MTs)', 3);
-  addCategorySchools(smaNames, 'SMA', 'Sekolah Menengah Atas/Kejuruan (SMA/SMK)', 2);
-  addCategorySchools(otherNames, 'Lainnya', 'Lembaga Pendidikan Non-Formal (PKBM/TBM)', 2);
+  const otherCombinedNames = [...smpNames, ...smaNames, ...otherNames];
+  addCategorySchools(otherCombinedNames, 'Lainnya', 'SMP / MTs / SMA / PKBM / Lainnya', 6);
 
   const totalSchools = schools.length;
   const totalVolume = schools.reduce((sum, s) => sum + s.volumeKoli, 0);
 
   const categoryConfigs: { category: SchoolCategory; label: string; color: string }[] = [
     { category: 'SD', label: 'SD / MI', color: '#ec3013' }, // Red
-    { category: 'SMP', label: 'SMP / MTs', color: '#1e40af' }, // Blue
-    { category: 'SMA', label: 'SMA / SMK', color: '#0f766e' }, // Teal
-    { category: 'Lainnya', label: 'Lainnya (PKBM/TBM)', color: '#605d5d' }, // Charcoal Slate
+    { category: 'Lainnya', label: 'SMP / MTs / SMA / PKBM / Lainnya', color: '#1e40af' }, // Blue
   ];
 
   const categories: CategorySummary[] = categoryConfigs.map((cfg) => {

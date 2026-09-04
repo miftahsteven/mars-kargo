@@ -61,13 +61,15 @@ export const SchoolTypeDistributionCard: React.FC<SchoolTypeDistributionCardProp
         {/* Horizontal Bar Chart for School Types */}
         <div className="flex flex-col gap-3 my-2">
           {categories.map((cat) => {
-            const isSelected = selectedCategory === cat.category;
+            const isSelected =
+              selectedCategory !== 'ALL' &&
+              selectedCategory.toUpperCase() === cat.category.toUpperCase();
             const barWidthPercent = Math.max(8, Math.round((cat.volumeKoli / maxVolume) * 100));
 
             return (
               <div
                 key={cat.category}
-                onClick={() => onSelectCategory(cat.category)}
+                onClick={() => onSelectCategory(cat.category as any)}
                 className={`p-3 transition-all cursor-pointer border ${
                   isSelected
                     ? 'bg-white border-[#ec3013] shadow-md ring-1 ring-[#ec3013]'
@@ -106,7 +108,7 @@ export const SchoolTypeDistributionCard: React.FC<SchoolTypeDistributionCardProp
                     className="h-full transition-all duration-300 relative"
                     style={{
                       width: `${barWidthPercent}%`,
-                      backgroundColor: isSelected ? '#ec3013' : cat.color,
+                      backgroundColor: isSelected ? '#ec3013' : (cat.color || '#605d5d'),
                     }}
                   >
                     {isSelected && (
@@ -117,7 +119,7 @@ export const SchoolTypeDistributionCard: React.FC<SchoolTypeDistributionCardProp
 
                 {/* Percentage and indicator */}
                 <div className="flex justify-between items-center mt-1 text-[10px] text-[#605d5d] font-semibold">
-                  <span>Kontribusi: {cat.percentage}% dari total kelurahan</span>
+                  <span>Kontribusi: {cat.percentage}% dari total wilayah</span>
                   <span className={isSelected ? 'text-[#ec3013] font-bold' : ''}>
                     {isSelected ? '● Sedang Ditampilkan' : 'Klik untuk melihat'}
                   </span>

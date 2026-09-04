@@ -74,7 +74,7 @@ export interface SubdistrictApiItem {
 }
 
 export interface SchoolCategoryApiItem {
-  category: 'SD' | 'SMP' | 'SMA' | 'LAINNYA';
+  category: 'SD' | 'LAINNYA' | string;
   label: string;
   schoolCount: number;
   volumeKoli: number;
