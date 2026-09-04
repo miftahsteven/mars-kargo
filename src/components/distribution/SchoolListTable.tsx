@@ -45,14 +45,14 @@ export const SchoolListTable: React.FC<SchoolListTableProps> = ({
   // Filtered schools
   const filteredSchools = useMemo(() => {
     return schools.filter((s) => {
-      // 1. Category filter (2 kategori: SD dan Lainnya)
+      // 1. Category filter (2 kategori: SD dan SMP)
       if (selectedCategory !== 'ALL') {
         const catUpper = selectedCategory.toUpperCase();
         const schoolCatUpper = (s.category || '').toUpperCase();
         if (catUpper === 'SD') {
           if (schoolCatUpper !== 'SD') return false;
         } else {
-          // Lainnya (SMP, MTS, SMA, PKBM, dll)
+          // SMP (mencakup SMP, MTS, SMA, PKBM, dll)
           if (schoolCatUpper === 'SD') return false;
         }
       }
@@ -199,7 +199,7 @@ export const SchoolListTable: React.FC<SchoolListTableProps> = ({
               <Filter className="w-3 h-3 text-[#ec3013]" />
               Filter Jenjang:
             </span>
-            {(['ALL', 'SD', 'Lainnya'] as const).map((cat) => (
+            {(['ALL', 'SD', 'SMP'] as const).map((cat) => (
               <button
                 key={cat}
                 onClick={() => onSelectCategory(cat)}
@@ -325,7 +325,7 @@ export const SchoolListTable: React.FC<SchoolListTableProps> = ({
                     {/* Jenjang */}
                     <td className="py-2.5 px-3 text-center whitespace-nowrap">
                       <span className="font-heading font-black text-[10px] px-2 py-0.5 bg-[#2d2b2b] text-white">
-                        {school.category.toUpperCase() === 'SD' ? 'SD' : 'LAINNYA'}
+                        {school.category.toUpperCase() === 'SD' ? 'SD' : 'SMP'}
                       </span>
                     </td>
 

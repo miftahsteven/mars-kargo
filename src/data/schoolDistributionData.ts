@@ -147,17 +147,17 @@ export function getSchoolDistributionData(subdistrict: SubdistrictItem): SchoolD
     }
   };
 
-  // Generate proportionate schools per category (2 kategori: SD dan Lainnya)
+  // Generate proportionate schools per category (2 kategori: SD dan SMP)
   addCategorySchools(sdNames, 'SD', 'Sekolah Dasar (SD/MI)', 4);
   const otherCombinedNames = [...smpNames, ...smaNames, ...otherNames];
-  addCategorySchools(otherCombinedNames, 'Lainnya', 'SMP / MTs / SMA / PKBM / Lainnya', 6);
+  addCategorySchools(otherCombinedNames, 'SMP', 'SMP / MTs / Lainnya', 6);
 
   const totalSchools = schools.length;
   const totalVolume = schools.reduce((sum, s) => sum + s.volumeKoli, 0);
 
   const categoryConfigs: { category: SchoolCategory; label: string; color: string }[] = [
     { category: 'SD', label: 'SD / MI', color: '#ec3013' }, // Red
-    { category: 'Lainnya', label: 'SMP / MTs / SMA / PKBM / Lainnya', color: '#1e40af' }, // Blue
+    { category: 'SMP', label: 'SMP / MTs / Lainnya', color: '#1e40af' }, // Blue
   ];
 
   const categories: CategorySummary[] = categoryConfigs.map((cfg) => {
