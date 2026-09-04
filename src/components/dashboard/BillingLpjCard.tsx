@@ -5,10 +5,15 @@ import { useAuth } from '../../context/AuthContext';
 
 interface BillingLpjCardProps {
   invoices: InvoiceItem[];
-  onExportLpj: () => void;
+  onExportLpj?: () => void;
+  showExportButton?: boolean;
 }
 
-export const BillingLpjCard: React.FC<BillingLpjCardProps> = ({ invoices, onExportLpj }) => {
+export const BillingLpjCard: React.FC<BillingLpjCardProps> = ({
+  invoices,
+  onExportLpj,
+  showExportButton = false,
+}) => {
   const { user } = useAuth();
   const isGovernment = user?.customerType === 'government';
 
@@ -43,10 +48,12 @@ export const BillingLpjCard: React.FC<BillingLpjCardProps> = ({ invoices, onExpo
           </div>
         </div>
 
-        <button className="btn btn-primary w-full mt-auto text-xs sm:text-sm" onClick={onExportLpj}>
-          <FileSpreadsheet className="w-4 h-4" />
-          Ekspor Laporan LPJ (XLSX / CSV)
-        </button>
+        {showExportButton && onExportLpj && (
+          <button className="btn btn-primary w-full mt-auto text-xs sm:text-sm" onClick={onExportLpj}>
+            <FileSpreadsheet className="w-4 h-4" />
+            Ekspor Laporan LPJ (XLSX / CSV)
+          </button>
+        )}
       </div>
 
       {/* Riwayat Invoice */}

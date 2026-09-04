@@ -149,7 +149,7 @@ export const SubdistrictDataTable: React.FC<SubdistrictDataTableProps> = ({
           'Kabupaten / Kota',
           'Kecamatan',
           'Kode Pos',
-          'Volume (Koli)',
+          'Volume (Pengiriman)',
           'Berat (Kg)',
           'Penerima',
           'Instansi',
@@ -158,7 +158,7 @@ export const SubdistrictDataTable: React.FC<SubdistrictDataTableProps> = ({
           'SLA Status',
           'Waktu Update',
         ]
-      : ['No', 'Provinsi', 'Kabupaten / Kota', 'Kecamatan', 'Kode Pos', 'Volume (Koli)'];
+      : ['No', 'Provinsi', 'Kabupaten / Kota', 'Kecamatan', 'Kode Pos', 'Volume (Pengiriman)'];
 
     const rows = filteredData.map((item, idx) =>
       SHOW_EXTENDED_COLUMNS
@@ -388,7 +388,7 @@ export const SubdistrictDataTable: React.FC<SubdistrictDataTableProps> = ({
                   Kode Pos
                 </th>
                 <th className="py-2.5 px-3 !text-[#201e1d] font-heading font-black tracking-wider text-[11px] uppercase text-center">
-                  Volume
+                  Pengiriman
                 </th>
                 {SHOW_EXTENDED_COLUMNS && (
                   <>
@@ -396,7 +396,7 @@ export const SubdistrictDataTable: React.FC<SubdistrictDataTableProps> = ({
                       Penerima & Instansi
                     </th>
                     <th className="py-2.5 px-3 !text-[#201e1d] font-heading font-black tracking-wider text-[11px] uppercase">
-                      Status & Waktu
+                      Status
                     </th>
                     <th className="py-2.5 px-3 !text-[#201e1d] font-heading font-black tracking-wider text-[11px] uppercase text-center">
                       Aksi
@@ -475,7 +475,7 @@ export const SubdistrictDataTable: React.FC<SubdistrictDataTableProps> = ({
                       {/* Volume Koli */}
                       <td className="py-2.5 px-3 text-center font-heading font-black text-[#201e1d]">
                         <span className="bg-[#f0eceb] px-2 py-0.5 rounded-none font-bold">
-                          {item.volume.toLocaleString('id-ID')} koli
+                          {item.volume.toLocaleString('id-ID')} pengiriman
                         </span>
                       </td>
 
@@ -488,7 +488,6 @@ export const SubdistrictDataTable: React.FC<SubdistrictDataTableProps> = ({
                           </td>
                           <td className="py-2.5 px-3">
                             <div>{renderStatusBadge(item.status)}</div>
-                            <div className="text-[10px] text-[#605d5d] mt-1">{item.waktuUpdate}</div>
                           </td>
                           <td className="py-2.5 px-3 text-center">
                             <button

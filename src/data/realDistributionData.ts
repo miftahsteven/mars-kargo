@@ -82,6 +82,82 @@ export const BASE_PROVINCES: { name: string; volume: number }[] = [
   { name: 'DI YOGYAKARTA', volume: 27 },
 ];
 
+export type IslandName =
+  | 'Sumatra'
+  | 'Jawa'
+  | 'Kalimantan'
+  | 'Sulawesi'
+  | 'Bali & Nusa Tenggara'
+  | 'Maluku'
+  | 'Papua';
+
+export interface ProvinceIslandMeta {
+  island: IslandName;
+  order: number;
+}
+
+/**
+ * Pemetaan resmi 38 Provinsi Indonesia berdasarkan urutan pulau dari Barat ke Timur:
+ * Sumatra (1-10) -> Jawa (11-16) -> Kalimantan (17-21) -> Sulawesi (22-27) -> Bali & Nusa Tenggara (28-30) -> Maluku (31-32) -> Papua (33-38)
+ */
+export function getProvinceIslandMeta(provName: string): ProvinceIslandMeta {
+  const norm = provName.toUpperCase().trim();
+
+  // 1. Pulau Sumatra
+  if (norm === 'ACEH') return { island: 'Sumatra', order: 1 };
+  if (norm === 'SUMATERA UTARA') return { island: 'Sumatra', order: 2 };
+  if (norm === 'SUMATERA BARAT') return { island: 'Sumatra', order: 3 };
+  if (norm === 'RIAU') return { island: 'Sumatra', order: 4 };
+  if (norm.includes('RIAU') && norm.includes('KEP')) return { island: 'Sumatra', order: 5 };
+  if (norm === 'JAMBI') return { island: 'Sumatra', order: 6 };
+  if (norm === 'BENGKULU') return { island: 'Sumatra', order: 7 };
+  if (norm === 'SUMATERA SELATAN') return { island: 'Sumatra', order: 8 };
+  if (norm.includes('BANGKA')) return { island: 'Sumatra', order: 9 };
+  if (norm === 'LAMPUNG') return { island: 'Sumatra', order: 10 };
+
+  // 2. Pulau Jawa
+  if (norm === 'BANTEN') return { island: 'Jawa', order: 11 };
+  if (norm.includes('JAKARTA')) return { island: 'Jawa', order: 12 };
+  if (norm === 'JAWA BARAT') return { island: 'Jawa', order: 13 };
+  if (norm === 'JAWA TENGAH') return { island: 'Jawa', order: 14 };
+  if (norm.includes('YOGYAKARTA')) return { island: 'Jawa', order: 15 };
+  if (norm === 'JAWA TIMUR') return { island: 'Jawa', order: 16 };
+
+  // 3. Pulau Kalimantan
+  if (norm === 'KALIMANTAN BARAT') return { island: 'Kalimantan', order: 17 };
+  if (norm === 'KALIMANTAN TENGAH') return { island: 'Kalimantan', order: 18 };
+  if (norm === 'KALIMANTAN SELATAN') return { island: 'Kalimantan', order: 19 };
+  if (norm === 'KALIMANTAN TIMUR') return { island: 'Kalimantan', order: 20 };
+  if (norm === 'KALIMANTAN UTARA') return { island: 'Kalimantan', order: 21 };
+
+  // 4. Pulau Sulawesi
+  if (norm === 'SULAWESI UTARA') return { island: 'Sulawesi', order: 22 };
+  if (norm === 'GORONTALO') return { island: 'Sulawesi', order: 23 };
+  if (norm === 'SULAWESI TENGAH') return { island: 'Sulawesi', order: 24 };
+  if (norm === 'SULAWESI BARAT') return { island: 'Sulawesi', order: 25 };
+  if (norm === 'SULAWESI SELATAN') return { island: 'Sulawesi', order: 26 };
+  if (norm === 'SULAWESI TENGGARA') return { island: 'Sulawesi', order: 27 };
+
+  // 5. Kepulauan Bali & Nusa Tenggara
+  if (norm === 'BALI') return { island: 'Bali & Nusa Tenggara', order: 28 };
+  if (norm === 'NTB' || (norm.includes('NUSA') && norm.includes('BARAT'))) return { island: 'Bali & Nusa Tenggara', order: 29 };
+  if (norm === 'NTT' || (norm.includes('NUSA') && norm.includes('TIMUR'))) return { island: 'Bali & Nusa Tenggara', order: 30 };
+
+  // 6. Kepulauan Maluku
+  if (norm === 'MALUKU') return { island: 'Maluku', order: 31 };
+  if (norm === 'MALUKU UTARA') return { island: 'Maluku', order: 32 };
+
+  // 7. Pulau Papua
+  if (norm === 'PAPUA BARAT') return { island: 'Papua', order: 33 };
+  if (norm === 'PAPUA BARAT DAYA') return { island: 'Papua', order: 34 };
+  if (norm === 'PAPUA') return { island: 'Papua', order: 35 };
+  if (norm === 'PAPUA TENGAH') return { island: 'Papua', order: 36 };
+  if (norm.includes('PEGUNUNGAN') || norm.includes('PEGUNUNUNGAN')) return { island: 'Papua', order: 37 };
+  if (norm === 'PAPUA SELATAN') return { island: 'Papua', order: 38 };
+
+  return { island: 'Papua', order: 99 };
+}
+
 // Curated Deep Data for Top Demostration Provinces
 const CURATED_PROVINCE_DETAILS: Record<string, { regencies: { name: string; share: number; districts: { name: string; subdistricts: string[] }[] }[] }> = {
   'JAWA BARAT': {

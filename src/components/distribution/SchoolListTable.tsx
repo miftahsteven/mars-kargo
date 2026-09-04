@@ -10,6 +10,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
+  Copy,
+  Check,
+  ExternalLink,
 } from 'lucide-react';
 
 interface SchoolListTableProps {
@@ -29,7 +32,15 @@ export const SchoolListTable: React.FC<SchoolListTableProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [copiedResi, setCopiedResi] = useState<string | null>(null);
   const itemsPerPage = 6;
+
+  const handleCopyResi = (resi: string) => {
+    if (!resi) return;
+    navigator.clipboard.writeText(resi);
+    setCopiedResi(resi);
+    setTimeout(() => setCopiedResi(null), 2000);
+  };
 
   // Filtered schools
   const filteredSchools = useMemo(() => {
@@ -44,10 +55,11 @@ export const SchoolListTable: React.FC<SchoolListTableProps> = ({
         const q = searchQuery.toLowerCase().trim();
         const matchName = s.name.toLowerCase().includes(q);
         const matchNpsn = s.npsn.toLowerCase().includes(q);
+        const matchResi = (s.resi || '').toLowerCase().includes(q);
         const matchRec = s.penerima.toLowerCase().includes(q);
         const matchAddr = s.alamat.toLowerCase().includes(q);
 
-        if (!matchName && !matchNpsn && !matchRec && !matchAddr) {
+        if (!matchName && !matchNpsn && !matchResi && !matchRec && !matchAddr) {
           return false;
         }
       }
@@ -71,6 +83,7 @@ export const SchoolListTable: React.FC<SchoolListTableProps> = ({
       'No',
       'Nama Sekolah',
       'NPSN',
+      'No Resi',
       'Jenjang',
       'Kecamatan',
       'Kode Pos',
@@ -79,7 +92,6 @@ export const SchoolListTable: React.FC<SchoolListTableProps> = ({
       'Nama Penerima',
       'Jabatan',
       'Status Pengiriman',
-      'Tanggal Terima',
       'Alamat Sekolah',
     ];
 
@@ -87,6 +99,7 @@ export const SchoolListTable: React.FC<SchoolListTableProps> = ({
       idx + 1,
       `"${s.name}"`,
       `"${s.npsn}"`,
+      `"${s.resi || '-'}"`,
       `"${s.category}"`,
       `"${s.kecamatan}"`,
       `"${(s as any).kodePos || s.kelurahan || '-'}"`,
@@ -95,7 +108,6 @@ export const SchoolListTable: React.FC<SchoolListTableProps> = ({
       `"${s.penerima}"`,
       `"${s.jabatan}"`,
       `"${s.status}"`,
-      `"${s.tanggalTerima}"`,
       `"${s.alamat}"`,
     ]);
 
@@ -136,6 +148,15 @@ export const SchoolListTable: React.FC<SchoolListTableProps> = ({
     }
   };
 
+  // Format title without confusing raw postal codes (e.g. '40000' or 'Kode Pos 40000')
+  const areaTitle = useMemo(() => {
+    if (!subdistrictName) return '';
+    if (/^Kode Pos:?\s*\d+/i.test(subdistrictName) || /^\d+$/.test(subdistrictName.trim())) {
+      return '';
+    }
+    return `di ${subdistrictName}`;
+  }, [subdistrictName]);
+
   return (
     <div className="card h-full p-4 sm:p-5 flex flex-col justify-between border border-black/10 bg-[#eae9e9]">
       <div>
@@ -147,7 +168,7 @@ export const SchoolListTable: React.FC<SchoolListTableProps> = ({
               DETAIL SEKOLAH PENERIMA PAKET
             </div>
             <h3 className="text-lg sm:text-xl font-heading font-extrabold text-[#201e1d] m-0">
-              {selectedCategory === 'ALL' ? 'Semua Sekolah' : `Daftar Sekolah ${selectedCategory}`} di {subdistrictName}
+              {selectedCategory === 'ALL' ? 'Semua Sekolah' : `Daftar Sekolah ${selectedCategory}`} {areaTitle}
             </h3>
             <div className="text-xs text-[#605d5d] mt-0.5">
               {districtName} · Menampilkan {filteredSchools.length} sekolah penerima
@@ -191,7 +212,7 @@ export const SchoolListTable: React.FC<SchoolListTableProps> = ({
             <Search className="w-3.5 h-3.5 text-[#605d5d] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
-              placeholder="Cari nama sekolah / NPSN..."
+              placeholder="Cari nama sekolah / NPSN / No. Resi..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -213,6 +234,9 @@ export const SchoolListTable: React.FC<SchoolListTableProps> = ({
                 <th className="py-2.5 px-3 !text-[#201e1d] font-heading font-black tracking-wider text-[11px] uppercase">
                   Nama Sekolah & NPSN
                 </th>
+                <th className="py-2.5 px-3 !text-[#201e1d] font-heading font-black tracking-wider text-[11px] uppercase whitespace-nowrap">
+                  No. Resi
+                </th>
                 <th className="py-2.5 px-3 !text-[#201e1d] font-heading font-black tracking-wider text-[11px] uppercase text-center w-20">
                   Jenjang
                 </th>
@@ -223,14 +247,14 @@ export const SchoolListTable: React.FC<SchoolListTableProps> = ({
                   Penerima & Jabatan
                 </th>
                 <th className="py-2.5 px-3 !text-[#201e1d] font-heading font-black tracking-wider text-[11px] uppercase">
-                  Status & Waktu
+                  Status
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#201e1d]/10">
               {currentSlice.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-8 text-sm text-[#605d5d]">
+                  <td colSpan={7} className="text-center py-8 text-sm text-[#605d5d]">
                     Tidak ada sekolah yang cocok dengan filter yang dipilih.
                   </td>
                 </tr>
@@ -251,6 +275,43 @@ export const SchoolListTable: React.FC<SchoolListTableProps> = ({
                         <span>NPSN: {school.npsn}</span>
                         <span>·</span>
                         <span className="truncate">{school.alamat}</span>
+                      </div>
+                    </td>
+
+                    {/* No. Resi */}
+                    <td className="py-2.5 px-3 font-mono font-bold text-xs whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
+                        {school.resi && school.resi !== '-' ? (
+                          <a
+                            href={`https://cargo.marscargo.net/search-courier.php?Consignment=${encodeURIComponent(school.resi)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#ec3013] hover:underline hover:text-[#b91c1c] inline-flex items-center gap-1 group font-mono font-bold cursor-pointer"
+                            title={`Lacak No. Resi ${school.resi} (Buka di tab baru)`}
+                          >
+                            <span>{school.resi}</span>
+                            <ExternalLink className="w-3 h-3 opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                          </a>
+                        ) : (
+                          <span className="text-[#605d5d]">-</span>
+                        )}
+                        {school.resi && school.resi !== '-' && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopyResi(school.resi!);
+                            }}
+                            className="text-[#605d5d] hover:text-[#ec3013] transition-colors p-1"
+                            title="Salin No. Resi"
+                          >
+                            {copiedResi === school.resi ? (
+                              <Check className="w-3 h-3 text-[#16a34a]" />
+                            ) : (
+                              <Copy className="w-3 h-3" />
+                            )}
+                          </button>
+                        )}
                       </div>
                     </td>
 
@@ -280,7 +341,6 @@ export const SchoolListTable: React.FC<SchoolListTableProps> = ({
                     {/* Status */}
                     <td className="py-2.5 px-3 whitespace-nowrap">
                       <div>{renderStatusBadge(school.status)}</div>
-                      <div className="text-[10px] text-[#605d5d] mt-0.5">{school.tanggalTerima}</div>
                     </td>
                   </tr>
                 ))

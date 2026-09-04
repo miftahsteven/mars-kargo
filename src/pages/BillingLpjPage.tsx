@@ -23,7 +23,7 @@ export const BillingLpjPage: React.FC = () => {
         <div className="text-xs text-[#605d5d]">Informasi invoice B2B, status pembayaran, dan ekspor laporan pertanggungjawaban kegiatan.</div>
       </div>
 
-      <BillingLpjCard invoices={invoices} onExportLpj={handleExportLpj} />
+      <BillingLpjCard invoices={invoices} onExportLpj={handleExportLpj} showExportButton={true} />
     </div>
   );
 };

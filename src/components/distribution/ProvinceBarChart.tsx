@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { BASE_PROVINCES } from '../../data/realDistributionData';
+import { BASE_PROVINCES, getProvinceIslandMeta } from '../../data/realDistributionData';
 import { Search, ArrowUpDown, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
 
 interface ProvinceBarChartProps {
@@ -15,7 +15,7 @@ export const ProvinceBarChart: React.FC<ProvinceBarChartProps> = ({
 }) => {
   const activeProvincesList = provinces && provinces.length > 0 ? provinces : BASE_PROVINCES;
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'volume-desc' | 'volume-asc' | 'name'>('volume-desc');
+  const [sortBy, setSortBy] = useState<'volume-desc' | 'volume-asc' | 'island' | 'name'>('volume-desc');
   const [hoverId, setHoverId] = useState<string | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -35,12 +35,18 @@ export const ProvinceBarChart: React.FC<ProvinceBarChartProps> = ({
       list.sort((a, b) => b.volume - a.volume);
     } else if (sortBy === 'volume-asc') {
       list.sort((a, b) => a.volume - b.volume);
+    } else if (sortBy === 'island') {
+      list.sort((a, b) => {
+        const metaA = getProvinceIslandMeta(a.name);
+        const metaB = getProvinceIslandMeta(b.name);
+        return metaA.order - metaB.order;
+      });
     } else if (sortBy === 'name') {
       list.sort((a, b) => a.name.localeCompare(b.name));
     }
 
     return list;
-  }, [searchTerm, sortBy]);
+  }, [activeProvincesList, searchTerm, sortBy]);
 
   const maxVol = useMemo(() => {
     return Math.max(...activeProvincesList.map((p) => p.volume), 1);
@@ -70,7 +76,7 @@ export const ProvinceBarChart: React.FC<ProvinceBarChartProps> = ({
             {selectedData && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-bold bg-[#ec3013] text-white rounded-none shadow-sm">
                 <CheckCircle className="w-3.5 h-3.5" />
-                Terpilih: {selectedData.name} ({selectedData.volume.toLocaleString('id-ID')} koli)
+                Terpilih: {selectedData.name} ({selectedData.volume.toLocaleString('id-ID')} pengiriman)
               </span>
             )}
           </div>
@@ -92,15 +98,19 @@ export const ProvinceBarChart: React.FC<ProvinceBarChartProps> = ({
             />
           </div>
 
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="input py-1 text-xs bg-white/70 border border-[#201e1d]/25 cursor-pointer"
-          >
-            <option value="volume-desc">Volume Tertinggi</option>
-            <option value="volume-asc">Volume Terendah</option>
-            <option value="name">Nama (A-Z)</option>
-          </select>
+          <div className="flex items-center gap-1.5">
+            <ArrowUpDown className="w-3.5 h-3.5 text-[#605d5d]" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="input py-1 text-xs bg-white/70 border border-[#201e1d]/25 cursor-pointer font-bold text-[#201e1d]"
+            >
+              <option value="volume-desc">Volume Tertinggi</option>
+              <option value="volume-asc">Volume Terendah</option>
+              <option value="island">Urutan Pulau (Sumatra - Papua)</option>
+              <option value="name">Nama (A-Z)</option>
+            </select>
+          </div>
 
           <div className="flex items-center gap-1">
             <button
@@ -142,86 +152,114 @@ export const ProvinceBarChart: React.FC<ProvinceBarChartProps> = ({
             const pct = totalVolumeAll > 0 ? ((pv.volume / totalVolumeAll) * 100).toFixed(1) : '0';
             const barHeight = Math.max(10, Math.round((pv.volume / maxVol) * 150));
             const isHovered = hoverId === pv.name;
+            const islandMeta = getProvinceIslandMeta(pv.name);
+            const prevIslandMeta = idx > 0 ? getProvinceIslandMeta(sortedProvinces[idx - 1].name) : null;
+            const isFirstOfIsland = sortBy === 'island' && (!prevIslandMeta || prevIslandMeta.island !== islandMeta.island);
 
             return (
-              <div
-                key={pv.name}
-                onClick={() => onSelectProvince(pv.name)}
-                onMouseEnter={() => setHoverId(pv.name)}
-                onMouseLeave={() => setHoverId(null)}
-                className={`flex-none w-[54px] flex flex-col items-center cursor-pointer relative group z-10 transition-all ${
-                  isSelected ? 'scale-[1.03] z-20' : 'hover:scale-[1.02]'
-                }`}
-              >
-                {/* Tooltip on Hover / Selected */}
-                {(isHovered || (isSelected && !hoverId)) && (
-                  <div
-                    className={`absolute -top-11 px-2.5 py-1 text-[10px] font-extrabold whitespace-nowrap z-30 shadow-lg border ${
-                      isSelected
-                        ? 'bg-[#ec3013] text-white border-white/40'
-                        : 'bg-[#2d2b2b] text-white border-[#444141]'
-                    }`}
-                  >
-                    {pv.name}: {pct}% ({pv.volume.toLocaleString('id-ID')} koli)
-                    {isSelected && <span className="block text-[9px] font-normal text-white/90">● Sedang Ditampilkan</span>}
+              <React.Fragment key={pv.name}>
+                {/* Island Section Divider when sorted by island */}
+                {isFirstOfIsland && (
+                  <div className="flex-none flex flex-col justify-end items-center mx-1.5 h-[210px] pb-9 z-10 select-none">
+                    <div className="bg-[#201e1d] text-white px-2 py-0.5 text-[9px] font-heading font-black tracking-widest uppercase shadow-xs whitespace-nowrap border-b-2 border-[#ec3013]">
+                      {islandMeta.island}
+                    </div>
+                    <div className="w-[1.5px] h-20 bg-[#201e1d]/25 mt-1 border-dashed border-l border-[#ec3013]/60" />
                   </div>
                 )}
 
-                {/* Active Indicator Arrow */}
-                {isSelected && (
-                  <div className="absolute -top-3 text-[#ec3013] animate-bounce">
-                    ▼
-                  </div>
-                )}
-
-                {/* Volume Label on Top */}
                 <div
-                  className={`text-[10px] font-extrabold whitespace-nowrap text-center mb-1 transition-colors ${
-                    isSelected ? 'text-[#ec3013] font-black scale-105' : 'text-[#201e1d]'
+                  onClick={() => onSelectProvince(pv.name)}
+                  onMouseEnter={() => setHoverId(pv.name)}
+                  onMouseLeave={() => setHoverId(null)}
+                  className={`flex-none w-[54px] flex flex-col items-center cursor-pointer relative group z-10 transition-all ${
+                    isSelected ? 'scale-[1.03] z-20' : 'hover:scale-[1.02]'
                   }`}
                 >
-                  {pv.volume.toLocaleString('id-ID')}
-                </div>
-
-                {/* Vertical Bar */}
-                <div
-                  className={`w-[46px] transition-all relative ${
-                    isSelected
-                      ? 'bg-[#ec3013] shadow-md ring-2 ring-[#ec3013]/50'
-                      : 'bg-[#bab6b6] group-hover:bg-[#ec3013]'
-                  }`}
-                  style={{ height: `${barHeight}px` }}
-                >
-                  {isSelected && (
-                    <div className="absolute inset-0 bg-white/20 animate-pulse pointer-events-none" />
+                  {/* Tooltip on Hover / Selected */}
+                  {(isHovered || (isSelected && !hoverId)) && (
+                    <div
+                      className={`absolute -top-14 px-2.5 py-1 text-[10px] font-extrabold whitespace-nowrap z-30 shadow-lg border ${
+                        isSelected
+                          ? 'bg-[#ec3013] text-white border-white/40'
+                          : 'bg-[#2d2b2b] text-white border-[#444141]'
+                      }`}
+                    >
+                      <div className="text-[9px] font-bold text-white/80 uppercase tracking-wider mb-0.5">
+                        Wilayah: {islandMeta.island}
+                      </div>
+                      <div>
+                        {pv.name}: {pct}% ({pv.volume.toLocaleString('id-ID')} pengiriman)
+                      </div>
+                      {isSelected && (
+                        <span className="block text-[9px] font-normal text-white/90">
+                          ● Sedang Ditampilkan
+                        </span>
+                      )}
+                    </div>
                   )}
-                </div>
 
-                {/* Baseline separator */}
-                <div
-                  className={`w-full border-t my-2 transition-colors ${
-                    isSelected ? 'border-[#ec3013] border-t-2' : 'border-[#201e1d]/20'
-                  }`}
-                />
+                  {/* Active Indicator Arrow */}
+                  {isSelected && (
+                    <div className="absolute -top-3 text-[#ec3013] animate-bounce">
+                      ▼
+                    </div>
+                  )}
 
-                {/* Province Name Label */}
-                <div
-                  className={`h-[38px] w-full flex items-start justify-center text-center mt-0.5 px-0.5 transition-colors ${
-                    isSelected ? 'bg-[#ec3013]/10 font-black' : ''
-                  }`}
-                >
-                  <span
-                    className={`text-[9px] leading-tight line-clamp-2 break-words transition-colors ${
-                      isSelected
-                        ? 'font-extrabold text-[#ec3013]'
-                        : 'font-bold text-[#605d5d] group-hover:text-[#ec3013]'
+                  {/* Volume Label on Top */}
+                  <div
+                    className={`text-[10px] font-extrabold whitespace-nowrap text-center mb-1 transition-colors ${
+                      isSelected ? 'text-[#ec3013] font-black scale-105' : 'text-[#201e1d]'
                     }`}
-                    title={pv.name}
                   >
-                    {pv.name}
-                  </span>
+                    {pv.volume.toLocaleString('id-ID')}
+                  </div>
+
+                  {/* Vertical Bar */}
+                  <div
+                    className={`w-[46px] transition-all relative ${
+                      isSelected
+                        ? 'bg-[#ec3013] shadow-md ring-2 ring-[#ec3013]/50'
+                        : 'bg-[#bab6b6] group-hover:bg-[#ec3013]'
+                    }`}
+                    style={{ height: `${barHeight}px` }}
+                  >
+                    {isSelected && (
+                      <div className="absolute inset-0 bg-white/20 animate-pulse pointer-events-none" />
+                    )}
+                  </div>
+
+                  {/* Baseline separator */}
+                  <div
+                    className={`w-full border-t my-2 transition-colors ${
+                      isSelected ? 'border-[#ec3013] border-t-2' : 'border-[#201e1d]/20'
+                    }`}
+                  />
+
+                  {/* Province Name Label */}
+                  <div
+                    className={`h-[42px] w-full flex flex-col items-center justify-start text-center mt-0.5 px-0.5 transition-colors ${
+                      isSelected ? 'bg-[#ec3013]/10 font-black' : ''
+                    }`}
+                  >
+                    <span
+                      className={`text-[9px] leading-tight line-clamp-2 break-words transition-colors ${
+                        isSelected
+                          ? 'font-extrabold text-[#ec3013]'
+                          : 'font-bold text-[#605d5d] group-hover:text-[#ec3013]'
+                      }`}
+                      title={pv.name}
+                    >
+                      {pv.name}
+                    </span>
+                    {sortBy === 'island' && (
+                      <span className="text-[7.5px] uppercase font-bold text-[#ec3013]/70 truncate max-w-full">
+                        {islandMeta.island.split(' ')[0]}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
+              </React.Fragment>
             );
           })}
         </div>

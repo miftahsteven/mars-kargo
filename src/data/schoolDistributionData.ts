@@ -4,6 +4,7 @@ export type SchoolCategory = 'SD' | 'SMP' | 'SMA' | 'Lainnya';
 
 export interface SchoolItem {
   id: string;
+  resi?: string;
   name: string;
   npsn: string;
   category: SchoolCategory;
@@ -127,6 +128,7 @@ export function getSchoolDistributionData(subdistrict: SubdistrictItem): SchoolD
 
       schools.push({
         id: `${subdistrict.id}-${category}-${i}`,
+        resi: `GLN-${subdistrict.kodePos || subdistrict.kelurahan || '40000'}-${String(npsnBase).slice(-5)}`,
         name: schoolName,
         npsn: String(npsnBase++),
         category,
@@ -178,8 +180,8 @@ export function getSchoolDistributionData(subdistrict: SubdistrictItem): SchoolD
 
   return {
     subdistrictId: subdistrict.id,
-    subdistrictName: subdistrict.kelurahan,
-    districtName: subdistrict.kecamatan,
+    subdistrictName: subdistrict.kecamatan || subdistrict.kelurahan,
+    districtName: subdistrict.kabupaten || subdistrict.kecamatan,
     regencyName: subdistrict.kabupaten,
     totalSchools,
     totalVolume,

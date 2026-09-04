@@ -95,7 +95,7 @@ export const RegencyDonutChart: React.FC<RegencyDonutChartProps> = ({
           <div className="text-right">
             <div className="text-xs text-[#605d5d] font-semibold">Total Pengiriman</div>
             <div className="text-sm font-extrabold font-heading text-[#201e1d]">
-              {totalVolume.toLocaleString('id-ID')} koli
+              {totalVolume.toLocaleString('id-ID')} pengiriman
             </div>
           </div>
         </div>
@@ -160,7 +160,7 @@ export const RegencyDonutChart: React.FC<RegencyDonutChartProps> = ({
               </div>
               <div className="text-xl font-heading font-black text-[#ec3013] mt-0.5">
                 {activeRegencyData?.volume.toLocaleString('id-ID')}
-                <span className="text-xs font-semibold text-[#201e1d] ml-1">koli</span>
+                <span className="text-xs font-semibold text-[#201e1d] ml-1">pengiriman</span>
               </div>
               <div className="inline-flex items-center gap-1 text-[11px] font-bold text-[#201e1d]/80 bg-white/70 px-2 py-0.5 mt-1 border border-black/10">
                 <span>{activePercentage}%</span>
@@ -215,7 +215,7 @@ export const RegencyDonutChart: React.FC<RegencyDonutChartProps> = ({
                 <div className="text-right flex-none flex items-center gap-2">
                   <div>
                     <div className="text-xs font-black text-[#201e1d]">
-                      {slice.volume.toLocaleString('id-ID')} koli
+                      {slice.volume.toLocaleString('id-ID')} pengiriman
                     </div>
                     <div className="text-[10px] font-bold text-[#605d5d]">
                       {(slice.share * 100).toFixed(1)}%

@@ -126,6 +126,7 @@ export const DistribusiRealPage: React.FC = () => {
           const distMap = new Map<string, SubdistrictItem[]>();
           subRes.items.forEach((item) => {
             const list = distMap.get(item.kecamatan) || [];
+            const shipmentCount = item.shipments || Math.round(item.volume / 4) || 1;
             list.push({
               id: item.id,
               kecamatan: item.kecamatan,
@@ -135,13 +136,13 @@ export const DistribusiRealPage: React.FC = () => {
               beratKg: item.volume * 2.5,
               kabupaten: item.kabupaten,
               provinsi: item.provinsi,
-              resi: `GLN-${item.kodePos}`,
-              penerima: `Sekolah di ${item.kecamatan}`,
+              resi: `${shipmentCount} Resi Pengiriman`,
+              penerima: `${shipmentCount} Sekolah Penerima`,
               instansi: 'Penerima Buku Sastra',
               status: 'Terkirim',
               slaStatus: 'On Time',
               kurir: 'Mars Logistics',
-              waktuUpdate: 'Hari ini, 15:30 WIB',
+              waktuUpdate: 'Data Terverifikasi',
             });
             distMap.set(item.kecamatan, list);
           });
@@ -247,8 +248,8 @@ export const DistribusiRealPage: React.FC = () => {
   const activeSchoolDistribution = useMemo(() => {
     if (liveSchoolData && liveSchoolData.schools.length > 0) {
       return {
-        subdistrictName: selectedSubdistrict?.kodePos || selectedSubdistrict?.kelurahan || '',
-        districtName: selectedSubdistrict?.kecamatan || '',
+        subdistrictName: selectedSubdistrict?.kecamatan || '',
+        districtName: selectedSubdistrict?.kabupaten || '',
         totalSchools: liveSchoolData.totalSchools,
         totalVolume: liveSchoolData.totalVolume,
         categories: liveSchoolData.categories,
@@ -310,7 +311,7 @@ export const DistribusiRealPage: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-[#605d5d] mt-0.5 m-0 leading-relaxed">
-              Data visualisasi <strong>Distribusi Real</strong> telah tersambung langsung dengan database PostgreSQL melalui endpoint backend MarsCargo. Anda dapat mengupload rekap data harian baru menggunakan tombol <strong>Upload Data Excel</strong> di atas.
+              Data visualisasi <strong>Distribusi Real</strong> telah tersambung langsung dengan database PostgreSQL melalui endpoint backend MarsCargo.
             </p>
           </div>
         </div>
@@ -366,7 +367,8 @@ export const DistribusiRealPage: React.FC = () => {
             </select>
           </div>
 
-          {/* Upload Excel Button */}
+          {/* Upload Excel Button - Disembunyikan terlebih dahulu sesuai request */}
+          {/*
           <button
             onClick={() => setIsUploadModalOpen(true)}
             className="btn btn-primary mt-auto py-2 px-3.5 bg-[#ec3013] hover:bg-[#c9250c] text-white transition-all flex items-center gap-1.5 text-xs font-bold shadow-sm"
@@ -375,6 +377,7 @@ export const DistribusiRealPage: React.FC = () => {
             <Upload className="w-3.5 h-3.5" />
             <span>Upload Data Excel</span>
           </button>
+          */}
 
           {/* Refresh Data Button */}
           <button
@@ -538,7 +541,7 @@ export const DistribusiRealPage: React.FC = () => {
                   Kode Pos: {selectedSubdistrict.kodePos || selectedSubdistrict.kelurahan}
                 </span>
                 <span className="text-white/70 italic ml-1">
-                  ({selectedSubdistrict.volume} koli terdistribusi)
+                  ({selectedSubdistrict.volume} pengiriman terdistribusi)
                 </span>
               </>
             ) : (
@@ -564,8 +567,8 @@ export const DistribusiRealPage: React.FC = () => {
             {/* Left: Distribusi Jenis Sekolah (Grafik Batang Horizontal: SD, SMP, SMA, Lainnya) */}
             <div className="lg:col-span-5 min-w-0">
               <SchoolTypeDistributionCard
-                subdistrictName={`Kode Pos: ${selectedSubdistrict.kodePos || selectedSubdistrict.kelurahan}`}
-                districtName={selectedSubdistrict.kecamatan}
+                subdistrictName={selectedSubdistrict.kecamatan}
+                districtName={`Kabupaten ${selectedSubdistrict.kabupaten}`}
                 categories={activeSchoolDistribution.categories as any}
                 selectedCategory={selectedSchoolCategory}
                 onSelectCategory={setSelectedSchoolCategory}
@@ -577,8 +580,8 @@ export const DistribusiRealPage: React.FC = () => {
             {/* Right: List Data Sekolah Penerima Paket */}
             <div className="lg:col-span-7 min-w-0">
               <SchoolListTable
-                subdistrictName={`Kode Pos ${selectedSubdistrict.kodePos || selectedSubdistrict.kelurahan}`}
-                districtName={selectedSubdistrict.kecamatan}
+                subdistrictName={selectedSubdistrict.kecamatan}
+                districtName={`Kabupaten ${selectedSubdistrict.kabupaten}`}
                 schools={activeSchoolDistribution.schools}
                 selectedCategory={selectedSchoolCategory}
                 onSelectCategory={setSelectedSchoolCategory}
