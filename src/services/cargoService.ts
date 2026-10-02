@@ -356,7 +356,7 @@ export const cargoService = {
     const rawUserData = authService.getRawUserData();
     const loggedInUserId = currentUser?.user_id || rawUserData?.user_id || 886;
     const officerId = params?.officer_id ?? loggedInUserId;
-    const limit = params?.limit ?? 10;
+    const limit = params?.limit ?? 80000;
     const order = params?.order ?? 'desc';
 
     try {
@@ -372,38 +372,43 @@ export const cargoService = {
       if (response.data && response.data.status === 'success' && Array.isArray(response.data.data)) {
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
-        return response.data.data.map((item: any) => {
-          let realTanggal = item.tanggal;
-          if (!realTanggal || realTanggal === '01 Jan 1970' || realTanggal === '1970-01-01') {
-            if (item.image_url) {
-              const match = item.image_url.match(/20\d\d-\d\d-\d\d/);
-              if (match) {
-                const [yyyy, mm, dd] = match[0].split('-');
-                const mIdx = parseInt(mm, 10) - 1;
-                if (mIdx >= 0 && mIdx < 12) {
-                  const dayStr = String(parseInt(dd, 10)).padStart(2, '0');
-                  realTanggal = `${dayStr} ${months[mIdx]} ${yyyy}`;
+        return response.data.data
+          .filter((item: any) => {
+            const checkText = `${item.penerima || ''} ${item.lokasi || ''} ${item.title || ''} ${item.subtext || ''} ${item.cons_no || ''} ${item.keterangan || ''}`.toLowerCase();
+            return !checkText.includes('perpustakaan');
+          })
+          .map((item: any) => {
+            let realTanggal = item.tanggal;
+            if (!realTanggal || realTanggal === '01 Jan 1970' || realTanggal === '1970-01-01') {
+              if (item.image_url) {
+                const match = item.image_url.match(/20\d\d-\d\d-\d\d/);
+                if (match) {
+                  const [yyyy, mm, dd] = match[0].split('-');
+                  const mIdx = parseInt(mm, 10) - 1;
+                  if (mIdx >= 0 && mIdx < 12) {
+                    const dayStr = String(parseInt(dd, 10)).padStart(2, '0');
+                    realTanggal = `${dayStr} ${months[mIdx]} ${yyyy}`;
+                  }
                 }
               }
             }
-          }
-          if (!realTanggal || realTanggal === '01 Jan 1970') {
-            realTanggal = 'Hari ini';
-          }
+            if (!realTanggal || realTanggal === '01 Jan 1970') {
+              realTanggal = 'Hari ini';
+            }
 
-          const penerimaName = item.penerima || 'Lokasi Penerima';
-          const subTextFormatted = `${penerimaName} · ${realTanggal}`;
+            const penerimaName = item.penerima || 'Lokasi Penerima';
+            const subTextFormatted = `${penerimaName} · ${realTanggal}`;
 
-          return {
-            resi: item.cons_no || 'RESI-UNKNOWN',
-            lokasi: penerimaName,
-            tanggal: realTanggal,
-            photoUrl: item.image_url || MOCK_PHOTOS.podHandoff1,
-            penerima: penerimaName,
-            subtext: subTextFormatted,
-            image_url: item.image_url,
-          };
-        });
+            return {
+              resi: item.cons_no || 'RESI-UNKNOWN',
+              lokasi: penerimaName,
+              tanggal: realTanggal,
+              photoUrl: item.image_url || MOCK_PHOTOS.podHandoff1,
+              penerima: penerimaName,
+              subtext: subTextFormatted,
+              image_url: item.image_url,
+            };
+          });
       }
     } catch (err) {
       console.warn('Failed to fetch get-epod-gallery from API:', err);

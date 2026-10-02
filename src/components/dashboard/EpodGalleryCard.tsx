@@ -14,6 +14,13 @@ interface EpodGalleryCardProps {
   onBulkExport?: () => void;
 }
 
+const filterPerpustakaan = (items: PodItem[]): PodItem[] => {
+  return items.filter((pod) => {
+    const text = `${pod.lokasi || ''} ${pod.penerima || ''} ${pod.subtext || ''} ${pod.resi || ''}`.toLowerCase();
+    return !text.includes('perpustakaan');
+  });
+};
+
 export const EpodGalleryCard: React.FC<EpodGalleryCardProps> = ({
   podItems: propsPodItems,
   officerId,
@@ -22,7 +29,7 @@ export const EpodGalleryCard: React.FC<EpodGalleryCardProps> = ({
   order = 'desc',
   onBulkExport,
 }) => {
-  const [data, setData] = useState<PodItem[]>(propsPodItems || []);
+  const [data, setData] = useState<PodItem[]>(() => (propsPodItems ? filterPerpustakaan(propsPodItems) : []));
   const [isLoading, setIsLoading] = useState<boolean>(!propsPodItems || propsPodItems.length === 0);
   const [previewPod, setPreviewPod] = useState<PodItem | null>(null);
 
@@ -62,7 +69,7 @@ export const EpodGalleryCard: React.FC<EpodGalleryCardProps> = ({
 
   useEffect(() => {
     if (propsPodItems && propsPodItems.length > 0) {
-      setData(propsPodItems);
+      setData(filterPerpustakaan(propsPodItems));
       setIsLoading(false);
       setCurrentPage(1);
       return;
@@ -75,7 +82,7 @@ export const EpodGalleryCard: React.FC<EpodGalleryCardProps> = ({
         limit,
         order,
       });
-      setData(res);
+      setData(filterPerpustakaan(res));
       setIsLoading(false);
     };
 
