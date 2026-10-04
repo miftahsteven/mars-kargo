@@ -355,15 +355,24 @@ export const cargoService = {
     const currentUser = authService.getCurrentUser();
     const rawUserData = authService.getRawUserData();
     const loggedInUserId = currentUser?.user_id || rawUserData?.user_id || 886;
+    const loggedInCabangId = currentUser?.cabang_id || rawUserData?.cabang_id || 846;
     const officerId = params?.officer_id ?? loggedInUserId;
     const limit = params?.limit ?? 80000;
     const order = params?.order ?? 'desc';
+
+    const isDikDasMenUser =
+      currentUser?.username === 'DikDasMen' ||
+      currentUser?.name === 'KEMENDIKDASMEN' ||
+      Number(loggedInCabangId) === 846 ||
+      Number(officerId) === 886;
 
     try {
       const response = await apiClient.get('', {
         params: {
           action: 'get-epod-gallery',
           officer_id: officerId,
+          office_id: loggedInCabangId,
+          cabang_id: loggedInCabangId,
           limit: limit,
           order: order,
         },
@@ -374,8 +383,11 @@ export const cargoService = {
 
         return response.data.data
           .filter((item: any) => {
+            // Jika bukan user DikDasMen (misal vendor lain/perpustakaan), jangan filter perpustakaan
+            if (!isDikDasMenUser) return true;
+
             const checkText = `${item.penerima || ''} ${item.lokasi || ''} ${item.title || ''} ${item.subtext || ''} ${item.cons_no || ''} ${item.keterangan || ''}`.toLowerCase();
-            return !checkText.includes('perpustakaan');
+            return !checkText.includes('perpustakaan') && !String(item.cons_no || '').toUpperCase().startsWith('PPNS');
           })
           .map((item: any) => {
             let realTanggal = item.tanggal;

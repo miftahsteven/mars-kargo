@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FolderDown, Eye, X, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PodItem } from '../../types/cargo';
 import { cargoService } from '../../services/cargoService';
+import { authService } from '../../services/authService';
 
 const EPOD_TOTAL_COUNT = import.meta.env.VITE_EPOD_TOTAL_COUNT || '5618';
 
@@ -15,9 +16,25 @@ interface EpodGalleryCardProps {
 }
 
 const filterPerpustakaan = (items: PodItem[]): PodItem[] => {
+  const currentUser = authService.getCurrentUser();
+  const rawUserData = authService.getRawUserData();
+  const loggedInCabangId = currentUser?.cabang_id || rawUserData?.cabang_id || 846;
+  const loggedInUserId = currentUser?.user_id || rawUserData?.user_id || 886;
+
+  const isDikDasMenUser =
+    currentUser?.username === 'DikDasMen' ||
+    currentUser?.name === 'KEMENDIKDASMEN' ||
+    Number(loggedInCabangId) === 846 ||
+    Number(loggedInUserId) === 886;
+
+  // Jika bukan user DikDasMen (misal vendor lain/perpustakaan), jangan difilter
+  if (!isDikDasMenUser) {
+    return items;
+  }
+
   return items.filter((pod) => {
     const text = `${pod.lokasi || ''} ${pod.penerima || ''} ${pod.subtext || ''} ${pod.resi || ''}`.toLowerCase();
-    return !text.includes('perpustakaan');
+    return !text.includes('perpustakaan') && !String(pod.resi || '').toUpperCase().startsWith('PPNS');
   });
 };
 
