@@ -1,0 +1,13 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Dukungan akses URL tanpa ekstensi .html
+  RewriteRule ^privacy-policy(-mars-cargo)?/?$ privacy-policy-mars-cargo.html [L]
+
+  # Standar React SPA Fallback: jika file atau folder fisik ada, layani langsung. Jika tidak ada, arahkan ke index.html
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
