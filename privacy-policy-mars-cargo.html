@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Kebijakan Privasi aplikasi mobile Mars Cargo untuk kurir internal: data pengiriman, izin perangkat, keamanan, penyimpanan, dan penghapusan data.">
+  <meta name="color-scheme" content="light">
+  <title>Privacy Policy — Mars Cargo</title>
+  <style>
+    :root{--ink:#17263b;--muted:#596777;--accent:#bb542c;--line:#dde3e8;--paper:#fff;--wash:#f4f6f8;--warm:#fcf2ec;--radius:16px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;scroll-padding-top:24px}
+    body{margin:0;background:var(--wash);color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.75;font-size:16px}
+    a{color:#16598c;text-underline-offset:3px}
+    a:hover{color:var(--accent)}
+    a:focus-visible,summary:focus-visible{outline:3px solid #e29470;outline-offset:5px;border-radius:3px}
+    .skip{position:absolute;left:16px;top:-100px;padding:10px 18px;background:white;z-index:10}
+    .skip:focus{top:12px}
+    .masthead{background:var(--paper);border-bottom:1px solid var(--line)}
+    .masthead-inner{max-width:1160px;margin:auto;padding:22px 32px;display:flex;align-items:center;gap:14px}
+    .mark{width:44px;height:44px;border-radius:12px;background:var(--ink);color:white;display:grid;place-items:center;font-size:15px;font-weight:800;letter-spacing:1px;flex-shrink:0}
+    .brand{font-size:17px;font-weight:800;line-height:1.35;letter-spacing:1.2px}
+    .brand small{display:block;font-size:11px;font-weight:600;letter-spacing:1.1px;color:var(--muted);margin-top:4px}
+    .internal{margin-left:auto;color:var(--muted);font-size:12px;border:1px solid var(--line);padding:5px 12px;border-radius:30px;white-space:nowrap}
+    .wrap{max-width:1160px;margin:auto;padding:48px 32px 32px}
+    .hero{max-width:850px;margin-bottom:30px}
+    .eyebrow{font-size:12px;letter-spacing:1.8px;text-transform:uppercase;font-weight:800;color:var(--accent);margin:0 0 12px}
+    h1{font-size:clamp(34px,5vw,48px);line-height:1.12;letter-spacing:-1.6px;margin:0 0 14px}
+    .subtitle{font-size:19px;margin:0 0 18px;color:var(--muted)}
+    .meta{display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px;font-size:13px;color:var(--muted)}
+    .draft-badge{display:inline-flex;align-items:center;gap:8px;background:#fff0d9;color:#75500d;padding:4px 11px;border-radius:20px;font-weight:700}
+    .draft-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:#b27a16}
+    .editor-note{background:#fffaf1;border:1px solid #ead7b1;border-radius:12px;padding:14px 18px;margin-bottom:28px;font-size:14px;color:#614d28}
+    .editor-note summary{cursor:pointer;font-weight:750}
+    .editor-note p{margin:8px 0 0}
+    .layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:30px;align-items:start}
+    .toc{position:sticky;top:24px;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:22px 18px}
+    .toc-title{font-size:11px;text-transform:uppercase;letter-spacing:1.6px;color:var(--muted);font-weight:800;margin:0 0 13px}
+    .toc ol{list-style:none;padding:0;margin:0;counter-reset:contents}
+    .toc li{counter-increment:contents}
+    .toc a{display:flex;gap:10px;text-decoration:none;font-size:13px;line-height:1.45;padding:8px 3px;color:var(--muted)}
+    .toc a::before{content:counter(contents,decimal-leading-zero);font-size:11px;color:#a4acb5;padding-top:1px;width:18px;flex-shrink:0}
+    .toc a:hover{color:var(--accent)}
+    .toc .deletion-link{color:var(--accent);font-weight:750}
+    main{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:36px 38px;min-width:0}
+    .intro{padding-bottom:28px;border-bottom:1px solid var(--line)}
+    .intro p{margin:0 0 14px}
+    .intro p:last-child{margin-bottom:0}
+    .summary-box{background:var(--warm);border-left:3px solid var(--accent);border-radius:0 9px 9px 0;padding:15px 18px;margin:20px 0 0;font-size:15px}
+    section{padding-top:30px;scroll-margin-top:24px}
+    section+section{margin-top:28px;border-top:1px solid var(--line)}
+    h2{font-size:21px;line-height:1.35;margin:0 0 16px;letter-spacing:-.35px}
+    .number{color:var(--accent);font-size:12px;letter-spacing:1px;display:block;margin-bottom:7px}
+    h3{font-size:16px;line-height:1.45;margin:23px 0 10px}
+    p{margin:0 0 14px}
+    ul,ol{padding-left:22px;margin:12px 0 16px}
+    li{padding-left:3px;margin:7px 0}
+    strong{font-weight:750}
+    .table-wrap{overflow-x:auto;margin:18px 0;border:1px solid var(--line);border-radius:10px}
+    table{width:100%;border-collapse:collapse;font-size:14px;line-height:1.65}
+    th{text-align:left;background:#f1f4f7;font-weight:750;padding:13px 15px;border-bottom:1px solid var(--line)}
+    td{padding:15px;vertical-align:top;border-bottom:1px solid var(--line)}
+    tr:last-child td{border-bottom:0}
+    td:first-child{width:28%;font-weight:700}
+    .feature-label{display:inline-block;font-size:11px;line-height:1.45;font-weight:700;background:#eef2f6;color:var(--muted);padding:3px 7px;border-radius:5px;margin:0 0 5px}
+    .small{color:var(--muted);font-size:14px}
+    .callout{border:1px solid #d1dfea;background:#f4f8fb;border-radius:10px;padding:17px 19px;margin:18px 0}
+    .callout p:last-child{margin-bottom:0}
+    .placeholder{background:#fff2d8;color:#7c520b;padding:1px 5px;border-radius:4px;overflow-wrap:anywhere;font-weight:650}
+    .contact{background:var(--ink);color:#fff;padding:24px;border-radius:12px;margin-top:16px}
+    .contact p{margin:0 0 10px}
+    .contact p:last-child{margin:0}
+    .contact .placeholder{display:inline-block;margin-top:4px}
+    .contact dt{font-size:12px;color:#b9c6d5}
+    .contact dd{margin:3px 0 15px;overflow-wrap:anywhere}
+    .contact dl{margin:0}
+    .contact dd:last-child{margin-bottom:0}
+    footer{max-width:1160px;margin:auto;padding:0 32px 32px;color:var(--muted);font-size:12px;text-align:center}
+    @media(max-width:900px){.layout{grid-template-columns:1fr;gap:22px}.toc{position:static}.toc ol{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}.wrap{padding-top:32px}}
+    @media(max-width:580px){body{font-size:15px}.masthead-inner{padding:18px 20px}.internal{display:none}.wrap{padding:30px 18px 24px}.subtitle{font-size:17px}.meta{gap:10px}.toc{padding:19px 17px}.toc ol{grid-template-columns:1fr}.toc a{padding:6px 2px}main{padding:26px 22px}h2{font-size:20px}.table-wrap{border:0;overflow:visible}table,tbody,tr,td{display:block}thead{display:none}tr{border:1px solid var(--line);border-radius:10px;margin-bottom:12px}td{border:0;padding:0 15px 14px}td:first-child{width:auto;padding:12px 15px 6px;background:#f1f4f7;border-radius:9px 9px 0 0;margin-bottom:10px}.contact{padding:20px}footer{padding:0 20px 24px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    @media print{body{background:white;font-size:10pt}.masthead-inner,.wrap,footer{max-width:none;padding:12px 0}.internal,.toc{display:none}.layout{display:block}main{border:0;padding:0}.hero{margin-bottom:18px}h1{font-size:28pt}section{break-inside:auto}h2,h3{break-after:avoid}.table-wrap{overflow:visible}tr,.callout,.contact{break-inside:avoid}.contact{background:white;color:var(--ink);border:1px solid var(--line)}.contact dt{color:var(--muted)}a{color:var(--ink)}}
+  </style>
+</head>
+<body>
+  <!--
+    DRAF UNTUK PENINJAUAN — bukan pernyataan bahwa praktik teknis sudah diverifikasi.
+    Sebelum publikasi:
+    1. Isi [NAMA_BADAN_HUKUM_PENGELOLA], [EMAIL_PRIVASI_RESMI],
+       dan [DAFTAR_PENYEDIA_LAYANAN]. Jangan membuat kontak yang tidak dimonitor.
+    2. Sesuaikan alur akun, data teknis, retensi, dan langkah keamanan dengan implementasi.
+    3. Bagian bertanda "Jika fitur tersedia" adalah klausul opsional. Hapus jika tidak
+       dipakai atau ubah agar persis sesuai perilaku aplikasi dan SDK.
+    4. Klausul GPS di bawah mengasumsikan lokasi hanya saat aplikasi digunakan.
+       Jika ada background location, ubah klausul, sebutkan waktu pengumpulan,
+       dan sediakan pengungkapan jelas serta persetujuan di dalam aplikasi.
+    5. Setelah pemeriksaan, hapus .draft-badge dan details.editor-note.
+    6. Sesuaikan tanggal berlaku; unggah sebagai halaman HTML publik tanpa login;
+       tautkan di aplikasi dan Play Console. Selaraskan formulir Data safety.
+    Halaman ini tidak memakai JavaScript, font eksternal, analitik, atau pelacak.
+  -->
+  <a class="skip" href="#kebijakan">Langsung ke kebijakan privasi</a>
+  <header class="masthead">
+    <div class="masthead-inner">
+      <div class="mark" aria-hidden="true">MC</div>
+      <div class="brand">MARS CARGO<small>APLIKASI KURIR INTERNAL</small></div>
+      <span class="internal">Kebijakan Privasi</span>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="hero">
+      <p class="eyebrow">Data Anda · Tanggung jawab kami</p>
+      <h1>Privacy Policy</h1>
+      <p class="subtitle">Kebijakan Privasi aplikasi mobile Mars Cargo</p>
+      <div class="meta">
+        <span class="draft-badge">Draf untuk peninjauan</span>
+        <span>Tanggal berlaku: <time datetime="2026-10-06">6 Oktober 2026</time></span>
+        <span>Terakhir diperbarui: <time datetime="2026-10-06">6 Oktober 2026</time></span>
+      </div>
+    </div>
+
+    <details class="editor-note" open>
+      <summary>Catatan penyelesaian draf</summary>
+      <p>Isi nama badan hukum, email privasi resmi, dan daftar penyedia layanan yang ditandai. Tinjau kebijakan akun, masa penyimpanan, keamanan, serta bagian opsional foto, GPS, dan notifikasi berdasarkan fitur yang benar-benar digunakan. Klausul GPS pada draf ini mengasumsikan penggunaan saat aplikasi aktif. Setelah sesuai, hapus catatan dan penanda draf ini sebelum halaman dipublikasikan.</p>
+    </details>
+
+    <div class="layout">
+      <nav class="toc" aria-label="Daftar isi kebijakan privasi">
+        <p class="toc-title">Isi kebijakan</p>
+        <ol>
+          <li><a href="#ruang-lingkup">Pengelola &amp; penggunaan</a></li>
+          <li><a href="#data">Data yang diproses</a></li>
+          <li><a href="#tujuan">Tujuan &amp; dasar pemrosesan</a></li>
+          <li><a href="#izin">Izin perangkat &amp; lokasi</a></li>
+          <li><a href="#berbagi">Akses &amp; pembagian data</a></li>
+          <li><a href="#keamanan">Keamanan data</a></li>
+          <li><a href="#penyimpanan">Penyimpanan &amp; retensi</a></li>
+          <li><a href="#hak">Hak &amp; pilihan pengguna</a></li>
+          <li><a class="deletion-link" href="#penghapusan">Penghapusan akun &amp; data</a></li>
+          <li><a href="#anak">Pengguna anak</a></li>
+          <li><a href="#perubahan">Perubahan kebijakan</a></li>
+          <li><a href="#kontak">Kontak privasi</a></li>
+        </ol>
+      </nav>
+
+      <main id="kebijakan">
+        <div class="intro">
+          <p>Mars Cargo menghargai privasi kurir, pengirim, dan penerima barang. Kebijakan Privasi ini menjelaskan bagaimana data pribadi diakses, dikumpulkan, digunakan, disimpan, dibagikan, dan dihapus dalam penggunaan aplikasi mobile <strong>Mars Cargo</strong> (“Aplikasi”).</p>
+          <p>Aplikasi digunakan untuk membantu kurir menjalankan tugas pengiriman, memperbarui status barang, serta menyampaikan laporan pengiriman kepada perusahaan.</p>
+          <div class="summary-box"><strong>Penggunaan internal.</strong> Aplikasi diperuntukkan hanya bagi kurir yang terlibat dalam operasional perusahaan Mars Cargo dan mendapatkan otorisasi dari perusahaan.</div>
+        </div>
+
+        <section id="ruang-lingkup">
+          <h2><span class="number">01</span>Pengelola dan ruang lingkup penggunaan</h2>
+          <p>Aplikasi dikelola oleh Mars Cargo, dengan badan hukum <span class="placeholder">[NAMA_BADAN_HUKUM_PENGELOLA]</span> (“kami”). Pengelola bertanggung jawab atas pemrosesan data untuk operasional Aplikasi dan menjadi pihak yang dapat dihubungi untuk pertanyaan privasi.</p>
+          <p>Akses Aplikasi terbatas pada akun kurir yang disetujui dan dikelola oleh administrator perusahaan. Pengguna wajib menjaga kerahasiaan akun dan menggunakan data pengiriman hanya untuk menjalankan tugas yang diberikan.</p>
+          <p>Kebijakan ini mencakup data pengguna Aplikasi serta data pengirim atau penerima yang diproses dalam tugas pengiriman. Akses ke data tersebut dibatasi sesuai penugasan dan kebutuhan operasional.</p>
+        </section>
+
+        <section id="data">
+          <h2><span class="number">02</span>Data yang diakses, dikumpulkan, dan diproses</h2>
+          <p>Data berasal dari administrasi perusahaan, informasi pengiriman yang diberikan pengirim atau pelanggan, input kurir, serta aktivitas teknis Aplikasi. Pemrosesan dibatasi pada data yang diperlukan untuk fitur dan tugas pengiriman.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th scope="col">Kategori data</th><th scope="col">Data dan penggunaannya</th></tr></thead>
+              <tbody>
+                <tr><td>Identitas dan akun kurir</td><td>Nama, ID kurir atau karyawan, nama pengguna, nomor telepon atau email kerja yang dicatat perusahaan, serta informasi autentikasi dan sesi. Digunakan untuk masuk, verifikasi akses, penugasan, dan komunikasi operasional.</td></tr>
+                <tr><td>Informasi pengiriman</td><td>Nomor resi atau referensi pengiriman, informasi barang yang diperlukan, nama dan kontak pengirim atau penerima, alamat pengambilan dan tujuan, serta instruksi pengiriman. Digunakan untuk melaksanakan pengiriman yang ditugaskan.</td></tr>
+                <tr><td>Status dan laporan</td><td>Status pengambilan dan pengantaran, tanggal dan waktu pembaruan, identitas kurir penanggung jawab, nama penerima saat serah terima, catatan kendala, serta laporan barang terkirim, tertunda, gagal dikirim, atau dikembalikan.</td></tr>
+                <tr><td>Foto bukti pengiriman</td><td><span class="feature-label">Jika fitur tersedia</span><br>Foto barang, kondisi paket, atau bukti serah terima yang secara sengaja diambil atau dipilih kurir untuk laporan. Foto diunggah bersama laporan kepada sistem Mars Cargo. Hindari wajah, dokumen identitas, atau informasi lain yang tidak diperlukan.</td></tr>
+                <tr><td>Data lokasi</td><td><span class="feature-label">Jika fitur tersedia</span><br>Koordinat lokasi perangkat ketika kurir menggunakan fitur pencatatan lokasi pengambilan atau pengantaran. Lokasi digunakan untuk memverifikasi titik pelaporan dan pelaksanaan pengiriman, sesuai penjelasan pada bagian izin perangkat.</td></tr>
+                <tr><td>Data teknis dan log</td><td>Versi Aplikasi dan sistem operasi, jenis perangkat, alamat IP, waktu akses, catatan kegagalan, serta aktivitas terkait masuk dan pembaruan laporan. Digunakan untuk keamanan, dukungan teknis, dan perbaikan keandalan layanan.</td></tr>
+                <tr><td>Notifikasi operasional</td><td><span class="feature-label">Jika fitur tersedia</span><br>Token notifikasi perangkat digunakan untuk menyampaikan penugasan, pembaruan pengiriman, atau informasi operasional kepada kurir.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>Kami membatasi pengumpulan data pada kebutuhan operasional. Kurir tidak boleh memasukkan data pribadi yang tidak relevan, termasuk foto dokumen identitas atau informasi pribadi penerima yang tidak diperlukan untuk pengiriman.</p>
+        </section>
+
+        <section id="tujuan">
+          <h2><span class="number">03</span>Tujuan dan dasar pemrosesan data</h2>
+          <p>Data digunakan untuk:</p>
+          <ul>
+            <li>Mengelola akun dan memastikan hanya kurir berwenang yang dapat mengakses Aplikasi.</li>
+            <li>Menyampaikan penugasan serta mendukung pengambilan, pengantaran, dan penyelesaian pengiriman.</li>
+            <li>Mencatat status, bukti pengiriman, kendala, dan riwayat pelaporan.</li>
+            <li>Memverifikasi pelaksanaan tugas, menindaklanjuti keluhan, dan menyelesaikan permasalahan pengiriman.</li>
+            <li>Menyusun rekap operasional, memantau penyelesaian tugas, dan meningkatkan kualitas layanan.</li>
+            <li>Menjaga keamanan sistem, mencegah penyalahgunaan, serta memenuhi kewajiban hukum yang berlaku.</li>
+          </ul>
+          <p>Kebijakan ini disusun dengan memperhatikan Undang-Undang Republik Indonesia Nomor 27 Tahun 2022 tentang Pelindungan Data Pribadi. Dasar pemrosesan ditentukan sesuai jenis data dan tujuannya, termasuk pelaksanaan hubungan kerja atau kontrak layanan, pemenuhan kewajiban hukum, kepentingan yang sah dengan mempertimbangkan hak subjek data, atau persetujuan apabila diperlukan.</p>
+          <p>Persetujuan atas akses perangkat diminta sebelum akses dilakukan, sesuai mekanisme sistem operasi dan fitur yang digunakan. Membaca kebijakan ini atau sekadar menggunakan Aplikasi tidak dianggap sebagai persetujuan otomatis untuk akses data sensitif yang memerlukan persetujuan khusus.</p>
+        </section>
+
+        <section id="izin">
+          <h2><span class="number">04</span>Izin perangkat dan penggunaan lokasi</h2>
+          <p>Izin perangkat diminta hanya untuk fitur yang memerlukannya. Pengguna dapat mengatur izin melalui pengaturan Aplikasi pada perangkat. Penolakan atau pencabutan izin dapat membatasi fitur terkait.</p>
+          <h3>Kamera dan foto <span class="feature-label">Jika fitur tersedia</span></h3>
+          <p>Kamera digunakan ketika kurir mengambil foto bukti pengiriman. Jika unggah foto tersedia, Aplikasi mengakses foto yang dipilih pengguna melalui pemilih foto atau izin media yang sesuai. Foto yang dilampirkan dikirim ke sistem Mars Cargo sebagai bagian dari laporan. Aplikasi tidak memerlukan akses seluruh koleksi foto untuk fungsi bukti pengiriman.</p>
+          <h3>Lokasi perangkat <span class="feature-label">Jika fitur tersedia</span></h3>
+          <p>Lokasi diakses setelah izin diberikan, ketika kurir menggunakan fitur pencatatan titik pengambilan atau pengantaran dalam Aplikasi. Koordinat dan waktu pencatatan dapat dikirim ke sistem Mars Cargo dan dilihat oleh petugas operasional berwenang untuk memverifikasi laporan pengiriman.</p>
+          <div class="callout">
+            <p><strong>Batas penggunaan lokasi.</strong> Klausul ini berlaku untuk pencatatan lokasi saat Aplikasi digunakan. Pengumpulan lokasi berhenti ketika Aplikasi tidak digunakan, dan lokasi tidak dikumpulkan di latar belakang atau ketika Aplikasi ditutup.</p>
+            <p>Jika izin lokasi ditolak atau dicabut, pencatatan titik pengiriman tidak dapat digunakan. Koordinat yang telah menjadi bagian dari laporan tetap mengikuti ketentuan penyimpanan dan penghapusan data dalam kebijakan ini.</p>
+          </div>
+          <h3>Notifikasi <span class="feature-label">Jika fitur tersedia</span></h3>
+          <p>Izin notifikasi digunakan untuk menampilkan informasi penugasan dan pembaruan pengiriman. Pengguna dapat mematikan notifikasi melalui pengaturan perangkat.</p>
+          <p>Akses internet digunakan untuk autentikasi, memuat tugas, menyinkronkan status, dan mengunggah laporan. Data dapat disimpan sementara pada perangkat untuk mendukung pengiriman laporan dan sinkronisasi yang diperlukan.</p>
+        </section>
+
+        <section id="berbagi">
+          <h2><span class="number">05</span>Pihak yang dapat mengakses data</h2>
+          <p>Akses dan pembagian data dibatasi sesuai kebutuhan berikut:</p>
+          <ul>
+            <li><strong>Kurir yang ditugaskan:</strong> informasi pengiriman yang diperlukan untuk tugas kurir tersebut.</li>
+            <li><strong>Tim Mars Cargo yang berwenang:</strong> administrator, petugas operasional, supervisor, atau petugas layanan pelanggan sesuai peran, untuk mengelola pengiriman dan menindaklanjuti laporan.</li>
+            <li><strong>Pengirim atau pelanggan terkait:</strong> status dan bukti pengiriman yang diperlukan untuk konfirmasi layanan atau penyelesaian keluhan, dengan membatasi data kurir dan penerima pada informasi yang relevan.</li>
+            <li><strong>Penyedia layanan teknologi:</strong> penyedia server, penyimpanan, dukungan sistem, notifikasi, atau layanan teknis yang bekerja untuk Mars Cargo sesuai fitur yang digunakan. Penyedia hanya diperbolehkan memproses data sesuai instruksi dan tujuan layanan.</li>
+            <li><strong>Pihak berwenang:</strong> apabila diperlukan untuk memenuhi kewajiban hukum, permintaan yang sah, atau perlindungan hak dan keamanan sesuai peraturan yang berlaku.</li>
+          </ul>
+          <p><strong>Penyedia layanan yang digunakan:</strong> <span class="placeholder">[DAFTAR_PENYEDIA_LAYANAN]</span>. Cantumkan nama penyedia, fungsi layanan, dan kategori data yang diproses; jika tidak ada penyedia pihak ketiga, sesuaikan bagian ini.</p>
+          <p>Kami tidak menjual data pribadi. Data pengiriman dan data kurir tidak digunakan untuk penargetan iklan atau pemasaran pihak ketiga. Setiap pihak yang mengakses data wajib menjaga kerahasiaan dan menggunakannya sesuai tujuan yang diizinkan.</p>
+          <p>Jika penyedia layanan memproses data di luar Indonesia, Mars Cargo bertanggung jawab menerapkan ketentuan transfer data dan pelindungan yang diwajibkan oleh peraturan yang berlaku.</p>
+        </section>
+
+        <section id="keamanan">
+          <h2><span class="number">06</span>Keamanan data</h2>
+          <p>Kami menerapkan langkah teknis dan organisasi yang sesuai untuk mengurangi risiko akses tanpa izin, perubahan, kehilangan, atau pengungkapan data, termasuk:</p>
+          <ul>
+            <li>Penggunaan koneksi terenkripsi, seperti HTTPS/TLS, untuk pengiriman data antara Aplikasi dan server.</li>
+            <li>Autentikasi akun dan pembatasan akses berdasarkan peran serta penugasan.</li>
+            <li>Pembatasan akses ke data dan infrastruktur hanya kepada pihak yang berwenang.</li>
+            <li>Pengelolaan kredensial, pemantauan aktivitas yang relevan, serta pemeliharaan sistem untuk menangani kerentanan.</li>
+            <li>Pengamanan penyimpanan dan salinan cadangan sesuai kebutuhan operasional.</li>
+          </ul>
+          <p>Pengguna bertanggung jawab menjaga keamanan perangkat dan kredensial, tidak berbagi akun, serta segera melaporkan dugaan penyalahgunaan kepada administrator atau kontak privasi. Jika terjadi insiden yang memengaruhi data pribadi, kami akan menangani dan memberikan pemberitahuan sesuai kewajiban hukum yang berlaku.</p>
+        </section>
+
+        <section id="penyimpanan">
+          <h2><span class="number">07</span>Penyimpanan dan masa retensi</h2>
+          <p>Data disimpan pada sistem Mars Cargo atau infrastruktur penyedia layanan yang ditunjuk. Data sementara dapat berada di perangkat kurir selama diperlukan untuk sesi kerja atau sinkronisasi laporan.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th scope="col">Jenis data</th><th scope="col">Prinsip penyimpanan dan penghapusan</th></tr></thead>
+              <tbody>
+                <tr><td>Data akun dan profil</td><td>Disimpan selama akun diperlukan untuk hubungan kerja atau penugasan. Setelah akun dihapus, data terkait dihapus atau dianonimkan, kecuali bagian yang masih wajib disimpan atas dasar hukum yang sah.</td></tr>
+                <tr><td>Data dan bukti pengiriman</td><td>Disimpan selama diperlukan untuk penyelesaian pengiriman, penanganan keluhan atau klaim yang belum selesai, pencatatan transaksi, serta kewajiban hukum. Data yang tidak lagi diperlukan dihapus atau dianonimkan.</td></tr>
+                <tr><td>Log teknis dan keamanan</td><td>Disimpan sebatas kebutuhan deteksi penyalahgunaan, penyelesaian insiden, dukungan teknis, dan audit yang sah; kemudian dihapus atau dianonimkan.</td></tr>
+                <tr><td>Salinan cadangan</td><td>Mengikuti siklus penggantian cadangan yang diterapkan perusahaan. Salinan dibatasi untuk pemulihan sistem dan dihapus sesuai siklusnya; data yang telah dihapus tidak digunakan kembali untuk operasional rutin.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>Masa penyimpanan ditentukan oleh tujuan pemrosesan, kebutuhan penyelesaian tugas atau sengketa yang masih berlangsung, dan kewajiban hukum. Penyimpanan tidak diperpanjang tanpa tujuan dan dasar yang sah. Pengguna dapat meminta penjelasan mengenai periode yang berlaku untuk datanya melalui kontak privasi.</p>
+        </section>
+
+        <section id="hak">
+          <h2><span class="number">08</span>Hak dan pilihan pengguna</h2>
+          <p>Sesuai ketentuan yang berlaku, pengguna dan subjek data dapat mengajukan permintaan untuk:</p>
+          <ul>
+            <li>Memperoleh informasi mengenai pemrosesan dan akses terhadap data pribadinya.</li>
+            <li>Memperbaiki atau memperbarui data yang tidak akurat.</li>
+            <li>Menarik persetujuan untuk pemrosesan yang didasarkan pada persetujuan.</li>
+            <li>Meminta pembatasan atau penghentian pemrosesan, serta penghapusan data, sepanjang persyaratan hukum terpenuhi.</li>
+            <li>Menyampaikan keberatan atau pengaduan mengenai pemrosesan data pribadi.</li>
+          </ul>
+          <p>Permintaan dapat dikirim kepada kontak privasi pada bagian akhir halaman ini. Kami dapat meminta informasi yang proporsional untuk memverifikasi identitas dan mencegah pengungkapan atau penghapusan data milik pihak lain. Permintaan ditangani dalam jangka waktu yang diwajibkan oleh ketentuan yang berlaku.</p>
+          <p>Pengirim dan penerima barang yang bukan pengguna Aplikasi tetap dapat menghubungi kami mengenai data pribadinya yang diproses dalam pengiriman Mars Cargo. Penarikan izin perangkat tidak dengan sendirinya menghapus laporan yang sudah dikirim.</p>
+        </section>
+
+        <section id="penghapusan">
+          <h2><span class="number">09</span>Permintaan penghapusan akun dan data</h2>
+          <p>Kurir dapat meminta penghapusan akun dan data pribadi melalui email privasi di bawah ini. Permintaan dapat dilakukan tanpa masuk ke Aplikasi, termasuk apabila hubungan kerja atau penugasan telah berakhir.</p>
+          <div class="callout">
+            <p><strong>Cara mengajukan permintaan:</strong></p>
+            <ol>
+              <li>Kirim email ke <span class="placeholder">[EMAIL_PRIVASI_RESMI]</span> dengan subjek <strong>“Permintaan Penghapusan Akun/Data Mars Cargo”</strong>.</li>
+              <li>Cantumkan nama, ID kurir atau identitas akun yang relevan, dan jenis permintaan. Jangan mengirimkan kata sandi, OTP, atau dokumen identitas yang tidak diminta.</li>
+              <li>Tim Mars Cargo memverifikasi permintaan dan memberikan informasi mengenai proses penghapusan serta data yang masih perlu disimpan beserta alasannya.</li>
+            </ol>
+          </div>
+          <p>Setelah permintaan penghapusan diproses, akun dihapus dan data pribadi yang terkait dihapus atau dianonimkan, kecuali data yang harus dipertahankan secara terbatas untuk kewajiban hukum, penyelesaian klaim yang masih berlangsung, keamanan, atau pencegahan penipuan dengan dasar yang sah.</p>
+          <p>Data yang dipertahankan dibatasi sesuai tujuan tersebut, tidak digunakan untuk keperluan lain yang tidak sesuai, dan dihapus atau dianonimkan ketika alasan penyimpanannya berakhir. Penutupan akses sementara atau penonaktifan akun tidak sama dengan penghapusan akun dan data.</p>
+          <p>Menghapus Aplikasi dari perangkat tidak secara otomatis menghapus data pada server. Untuk penghapusan data server, ajukan permintaan melalui mekanisme di atas.</p>
+        </section>
+
+        <section id="anak">
+          <h2><span class="number">10</span>Privasi anak</h2>
+          <p>Aplikasi merupakan sarana kerja internal untuk kurir yang diotorisasi perusahaan dan tidak ditujukan bagi anak-anak. Kami tidak secara sengaja mengumpulkan data anak untuk pembuatan akun kurir. Jika terdapat dugaan pengumpulan data anak secara tidak semestinya, hubungi kontak privasi agar dapat ditindaklanjuti.</p>
+        </section>
+
+        <section id="perubahan">
+          <h2><span class="number">11</span>Perubahan Kebijakan Privasi</h2>
+          <p>Kami dapat memperbarui kebijakan ini apabila terdapat perubahan fitur, praktik pemrosesan data, atau ketentuan yang berlaku. Versi terbaru akan ditampilkan pada halaman ini dengan tanggal pembaruan.</p>
+          <p>Perubahan yang berdampak penting pada pemrosesan data akan diinformasikan melalui Aplikasi atau saluran komunikasi resmi perusahaan. Jika perubahan memerlukan persetujuan baru, persetujuan tersebut akan diminta sebelum pemrosesan yang bersangkutan dilakukan.</p>
+        </section>
+
+        <section id="kontak">
+          <h2><span class="number">12</span>Hubungi kami</h2>
+          <p>Untuk pertanyaan, pengaduan, permintaan akses atau perbaikan data, serta penghapusan akun dan data, hubungi:</p>
+          <div class="contact">
+            <dl>
+              <dt>Pengelola Aplikasi</dt>
+              <dd><strong>Mars Cargo</strong><br><span class="placeholder">[NAMA_BADAN_HUKUM_PENGELOLA]</span></dd>
+              <dt>Email privasi dan permintaan penghapusan data</dt>
+              <dd><span class="placeholder">[EMAIL_PRIVASI_RESMI]</span></dd>
+              <dt>Penanganan permintaan</dt>
+              <dd>Tim administrasi atau petugas yang ditunjuk oleh perusahaan Mars Cargo.</dd>
+            </dl>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <footer>Mars Cargo · Kebijakan Privasi aplikasi kurir internal</footer>
+</body>
+</html>

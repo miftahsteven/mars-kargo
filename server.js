@@ -11,6 +11,11 @@ const PORT = process.env.PORT || 7020;
 // Serve static assets from dist folder
 app.use(express.static(path.join(__dirname, 'dist')));
 
+// Explicit route for Privacy Policy (supports /privacy-policy-mars-cargo.html, /privacy-policy-mars-cargo, and /privacy-policy)
+app.get(['/privacy-policy-mars-cargo.html', '/privacy-policy-mars-cargo', '/privacy-policy'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'privacy-policy-mars-cargo.html'));
+});
+
 // SPA fallback for React Router (using modern route handler to prevent path-to-regexp wildcard errors)
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));

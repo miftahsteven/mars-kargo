@@ -16,6 +16,10 @@ export default defineConfig({
   build: {
     chunkSizeWarningLimit: 1600,
     rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        privacy: path.resolve(__dirname, 'privacy-policy-mars-cargo.html'),
+      },
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
